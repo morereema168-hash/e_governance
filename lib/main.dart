@@ -9,6 +9,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/community_screen.dart';
 import 'screens/fundraise_screen.dart';
 import 'screens/cityinfo_screen.dart';
+import 'screens/mayor_dashboard_screen.dart';
 import 'widgets/shared_widgets.dart';
 
 void main() {
@@ -61,13 +62,25 @@ class _RootState extends State<_Root> {
           ],
         ),
       ),
-      bottomNavigationBar: tab == 'cityinfo'
+      // Hide the bottom navigation bar if viewing City Info OR if the user is the Mayor
+      bottomNavigationBar: (tab == 'cityinfo' || user!.role == 'mayor')
           ? null
           : _BottomNav(active: tab, setTab: _setTab),
     );
   }
 
   Widget _page() {
+    // Both Citizen and Mayor can access the City Info page from the top bar
+    if (tab == 'cityinfo') {
+      return CityInfoScreen();
+    }
+
+    // If the user is the Mayor, show the Mayor Dashboard instead of standard tabs!
+    if (user!.role == 'mayor') {
+      return MayorDashboardScreen(user: user!);
+    }
+
+    // Standard citizen routing
     switch (tab) {
       case 'feed':
         return CommunityScreen(user: user!);
@@ -77,8 +90,6 @@ class _RootState extends State<_Root> {
         return DashboardScreen();
       case 'fundraise':
         return FundraiseScreen();
-      case 'cityinfo':
-        return CityInfoScreen();
       default:
         return VoteScreen();
     }
@@ -177,7 +188,14 @@ class _TopBarState extends State<_TopBar> {
               // City info
               _IconBtn(
                 icon: Icons.public,
-                onTap: () => widget.setTab('cityinfo'),
+                onTap: () {
+                  // Allow Mayor to toggle back to dashboard if they click the globe again
+                  if (widget.user.role == 'mayor') {
+                    widget.setTab('dashboard'); // Forces a rebuild to show the mayor screen again
+                  } else {
+                    widget.setTab('cityinfo');
+                  }
+                },
               ),
               const SizedBox(width: 8),
               // Notifications
