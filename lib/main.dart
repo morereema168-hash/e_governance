@@ -62,8 +62,9 @@ class _RootState extends State<_Root> {
           ],
         ),
       ),
-      // Hide the bottom navigation bar if viewing City Info OR if the user is the Mayor
-      bottomNavigationBar: (tab == 'cityinfo' || user!.role == 'mayor')
+      // ARCHITECTURE FIX: Bottom nav remains visible on 'cityinfo'
+      // Only hide the bottom navigation bar if the user is the Mayor
+      bottomNavigationBar: user!.role == 'mayor'
           ? null
           : _BottomNav(active: tab, setTab: _setTab),
     );
@@ -72,7 +73,7 @@ class _RootState extends State<_Root> {
   Widget _page() {
     // Both Citizen and Mayor can access the City Info page from the top bar
     if (tab == 'cityinfo') {
-      return CityInfoScreen();
+      return const CityInfoScreen();
     }
 
     // If the user is the Mayor, show the Mayor Dashboard instead of standard tabs!
@@ -87,11 +88,11 @@ class _RootState extends State<_Root> {
       case 'report':
         return ReportScreen(user: user!);
       case 'dashboard':
-        return DashboardScreen();
+        return const DashboardScreen();
       case 'fundraise':
-        return FundraiseScreen();
+        return const FundraiseScreen();
       default:
-        return VoteScreen();
+        return const VoteScreen();
     }
   }
 }
