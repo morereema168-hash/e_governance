@@ -5,15 +5,27 @@ import '../widgets/shared_widgets.dart';
 
 class FundraiseScreen extends StatefulWidget {
   const FundraiseScreen({super.key});
+<<<<<<< HEAD
   @override State<FundraiseScreen> createState() => _FundraiseScreenState();
+=======
+  @override
+  State<FundraiseScreen> createState() => _FundraiseScreenState();
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
 }
 
 class _FundraiseScreenState extends State<FundraiseScreen> {
   final List<Fundraiser> funds = [
+<<<<<<< HEAD
     Fundraiser(id:1,type:'community',title:'Ganeshotsav 2025',goal:50000,raised:32000,desc:'Annual festival fund for decorations, sound & prasad distribution across 5 wards.',backers:142),
     Fundraiser(id:2,type:'community',title:'Swachh Ward 3 Campaign',goal:15000,raised:11200,desc:'Cleanliness drive — buying equipment, gloves & waste bags for 200 volunteers.',backers:67),
     Fundraiser(id:3,type:'private',title:'Medical Help – R. Kale',goal:20000,raised:8000,desc:'Cancer treatment support for Ramesh Kale, father of two. Chemotherapy ongoing.',backers:34),
     Fundraiser(id:4,type:'private',title:'Education Fund – M. Jadhav',goal:10000,raised:4500,desc:'School fees assistance for Meena Jadhav, Class 10 student from Ward 3.',backers:28),
+=======
+    Fundraiser(id: 1, type: 'community', title: 'Ganeshotsav 2025', goal: 50000, raised: 32000, desc: 'Annual festival fund for decorations, sound & prasad distribution across 5 wards.', backers: 142),
+    Fundraiser(id: 2, type: 'community', title: 'Swachh Ward 3 Campaign', goal: 15000, raised: 11200, desc: 'Cleanliness drive — buying equipment, gloves & waste bags for 200 volunteers.', backers: 67),
+    Fundraiser(id: 3, type: 'private', title: 'Medical Help – R. Kale', goal: 20000, raised: 8000, desc: 'Cancer treatment support for Ramesh Kale, father of two. Chemotherapy ongoing.', backers: 34),
+    Fundraiser(id: 4, type: 'private', title: 'Education Fund – M. Jadhav', goal: 10000, raised: 4500, desc: 'School fees assistance for Meena Jadhav, Class 10 student from Ward 3.', backers: 28),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
   ];
 
   String filter    = 'all';
@@ -39,7 +51,12 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
     return list;
   }
 
+<<<<<<< HEAD
   @override Widget build(BuildContext context) {
+=======
+  @override
+  Widget build(BuildContext context) {
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     final isWide = MediaQuery.of(context).size.width > 700;
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 80),
@@ -233,19 +250,58 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
         const SizedBox(height: 12),
       ],
 
+<<<<<<< HEAD
       // Form
       if (showForm) ...[
         _buildForm(),
         const SizedBox(height: 12),
       ],
+=======
+      // Form with smooth expanding animation
+      AnimatedSize(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOutCubic,
+        child: showForm ? Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildForm(),
+        ) : const SizedBox.shrink(),
+      ),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
 
       // Campaign count
       Text('${shown.length} campaign${shown.length != 1 ? 's' : ''}',
         style: const TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
       const SizedBox(height: 10),
 
+<<<<<<< HEAD
       // Cards
       for (final f in shown) _fundraiserCard(f),
+=======
+      // Cards with staggered entrance
+      ...shown.asMap().entries.map((entry) {
+        final index = entry.key;
+        final f = entry.value;
+        return TweenAnimationBuilder<double>(
+          key: ValueKey(f.id),
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            return Transform.translate(
+              offset: Offset(0, 20 * (1 - value)),
+              child: Opacity(
+                opacity: value,
+                child: child,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: _fundraiserCard(f),
+          ),
+        );
+      }).toList(),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     ]);
   }
 
@@ -260,13 +316,18 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
             child: const Icon(Icons.close, color: AppColors.grey, size: 20)),
         ]),
         const SizedBox(height: 12),
+<<<<<<< HEAD
         // Type toggle
+=======
+        // Type toggle with animated scale
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
         Row(children: [
           for (final t in ['community', 'private'])
             Expanded(child: Padding(
               padding: EdgeInsets.only(right: t == 'community' ? 8 : 0),
               child: GestureDetector(
                 onTap: () => setState(() => formType = t),
+<<<<<<< HEAD
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
@@ -283,6 +344,31 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13,
                         color: formType == t ? Colors.white : AppColors.dark, fontFamily: 'Nunito')),
                   ]),
+=======
+                child: AnimatedScale(
+                  scale: formType == t ? 1.03 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOutBack,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: formType == t ? AppColors.orange : AppColors.bg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: formType == t ? AppColors.orange : AppColors.border),
+                      boxShadow: formType == t ? [BoxShadow(color: AppColors.orange.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))] : [],
+                    ),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(t == 'community' ? Icons.groups_outlined : Icons.person_outline,
+                        size: 16, color: formType == t ? Colors.white : AppColors.grey),
+                      const SizedBox(width: 6),
+                      Text(t == 'community' ? 'Community' : 'Private',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13,
+                          color: formType == t ? Colors.white : AppColors.dark, fontFamily: 'Nunito')),
+                    ]),
+                  ),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
                 ),
               ),
             )),
@@ -290,6 +376,7 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
         const SizedBox(height: 12),
         const Text('TITLE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
         const SizedBox(height: 5),
+<<<<<<< HEAD
         TextField(controller: _titleCtrl, decoration: const InputDecoration(hintText: 'Campaign title…'), style: const TextStyle(fontFamily: 'Nunito')),
         const SizedBox(height: 10),
         const Text('DESCRIPTION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
@@ -301,6 +388,46 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
         TextField(controller: _goalCtrl, keyboardType: TextInputType.number,
           decoration: const InputDecoration(hintText: 'Target amount', prefixText: '₹ '),
           style: const TextStyle(fontFamily: 'Nunito')),
+=======
+        TextField(
+          controller: _titleCtrl, 
+          decoration: InputDecoration(
+            hintText: 'Campaign title…',
+            filled: true,
+            fillColor: AppColors.bg,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          ), 
+          style: const TextStyle(fontFamily: 'Nunito')
+        ),
+        const SizedBox(height: 10),
+        const Text('DESCRIPTION', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
+        const SizedBox(height: 5),
+        TextField(
+          controller: _descCtrl, 
+          maxLines: 2, 
+          decoration: InputDecoration(
+            hintText: 'Tell people why this matters…',
+            filled: true,
+            fillColor: AppColors.bg,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          ), 
+          style: const TextStyle(fontFamily: 'Nunito')
+        ),
+        const SizedBox(height: 10),
+        const Text('GOAL (₹)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
+        const SizedBox(height: 5),
+        TextField(
+          controller: _goalCtrl, keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: 'Target amount', 
+            prefixText: '₹ ',
+            filled: true,
+            fillColor: AppColors.bg,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          ),
+          style: const TextStyle(fontFamily: 'Nunito')
+        ),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
         const SizedBox(height: 14),
         AppBtn(label: '🚀  Launch Campaign', color: AppColors.green, full: true, onTap: () {
           if (_titleCtrl.text.isEmpty || _goalCtrl.text.isEmpty) return;
@@ -320,6 +447,10 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
   Widget _fundraiserCard(Fundraiser f) {
     final color      = f.type == 'community' ? AppColors.green : AppColors.purple;
     final pct        = (f.raised / f.goal * 100).clamp(0.0, 100.0);
+<<<<<<< HEAD
+=======
+    final rawRatio   = (f.raised / f.goal).clamp(0.0, 1.0);
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     final isExpanded = expandedId == f.id;
     final isDonating = donatingId == f.id;
     final isComplete = f.raised >= f.goal;
@@ -351,6 +482,7 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
         ]),
         const SizedBox(height: 10),
 
+<<<<<<< HEAD
         // Title + desc
         Text(f.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Nunito')),
         if (f.desc.isNotEmpty) ...[
@@ -364,17 +496,62 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
               onTap: () => setState(() => expandedId = isExpanded ? null : f.id),
               child: Text(isExpanded ? 'Show less' : 'Read more',
                 style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700, fontFamily: 'Nunito')),
+=======
+        // Title + Animated Expandable Description
+        Text(f.title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Nunito')),
+        if (f.desc.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            alignment: Alignment.topCenter,
+            child: Text(
+              f.desc,
+              maxLines: isExpanded ? 10 : 2,
+              overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: AppColors.greyDark, fontFamily: 'Nunito', height: 1.5)
+            ),
+          ),
+          if (f.desc.length > 80)
+            GestureDetector(
+              onTap: () => setState(() => expandedId = isExpanded ? null : f.id),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(isExpanded ? 'Show less' : 'Read more',
+                  style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w700, fontFamily: 'Nunito')),
+              ),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
             ),
         ],
         const SizedBox(height: 14),
 
         // Progress row
         Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+<<<<<<< HEAD
           // Circle
           SizedBox(width: 56, height: 56, child: CustomPaint(
             painter: _CirclePainter(pct: f.raised / f.goal, color: color),
             child: Center(child: Text('${pct.round()}%',
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: color, fontFamily: 'Nunito'))),
+=======
+          // Animated Circle
+          SizedBox(width: 56, height: 56, child: TweenAnimationBuilder<double>(
+            key: ValueKey('${f.id}_$rawRatio'),
+            tween: Tween(begin: 0.0, end: rawRatio),
+            duration: const Duration(milliseconds: 1000),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return CustomPaint(
+                painter: _CirclePainter(pct: value, color: color),
+                child: Center(
+                  child: Text(
+                    '${(value * 100).round()}%',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: color, fontFamily: 'Nunito')
+                  )
+                ),
+              );
+            },
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
           )),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -394,6 +571,7 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
         ]),
         const SizedBox(height: 14),
 
+<<<<<<< HEAD
         // Donate input or button
         if (isDonating)
           Row(children: [
@@ -442,6 +620,72 @@ class _FundraiseScreenState extends State<FundraiseScreen> {
               ),
             ),
           ]),
+=======
+        // Smoothly Transitioning Donate Form/Buttons
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            return SizeTransition(
+              sizeFactor: animation,
+              axisAlignment: -1.0,
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+          child: isDonating 
+            ? Row(key: const ValueKey('form'), children: [
+                Expanded(child: TextField(
+                  controller: _amtCtrl, keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    hintText: '₹ Enter amount', 
+                    prefixText: '₹ ',
+                    filled: true,
+                    fillColor: AppColors.bg,
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                  ),
+                  style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                )),
+                const SizedBox(width: 8),
+                AppBtn(label: 'Give', color: AppColors.green, small: true, onTap: () {
+                  final a = int.tryParse(_amtCtrl.text) ?? 0;
+                  if (a > 0) {
+                    setState(() {
+                      f.raised = (f.raised + a).clamp(0, f.goal);
+                      f.backers++;
+                      donatingId = null;
+                      _amtCtrl.clear();
+                    });
+                  }
+                }),
+                const SizedBox(width: 6),
+                AppBtn(label: '✕', color: AppColors.grey, outline: true, small: true,
+                  onTap: () => setState(() { donatingId = null; _amtCtrl.clear(); })),
+              ])
+            : Row(key: const ValueKey('button'), children: [
+                Expanded(child: AppBtn(
+                  label: isComplete ? '🎉 Fully Funded' : 'Donate Now',
+                  color: isComplete ? AppColors.green : AppColors.orange,
+                  outline: !isComplete,
+                  disabled: isComplete,
+                  full: true,
+                  onTap: () => setState(() => donatingId = f.id),
+                )),
+                const SizedBox(width: 8),
+                // Share button
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.share_outlined, color: AppColors.grey, size: 18),
+                    onPressed: () {},
+                    tooltip: 'Share',
+                  ),
+                ),
+              ]),
+        ),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
       ]),
     );
   }
@@ -459,5 +703,9 @@ class _CirclePainter extends CustomPainter {
       -1.5708, pct.clamp(0, 1) * 6.2832, false,
       Paint()..color = color..strokeWidth = 6..style = PaintingStyle.stroke..strokeCap = StrokeCap.round);
   }
+<<<<<<< HEAD
   @override bool shouldRepaint(_) => true;
+=======
+  @override bool shouldRepaint(covariant _CirclePainter oldDelegate) => oldDelegate.pct != pct || oldDelegate.color != color;
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
 }

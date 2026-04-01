@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'package:e_governance/firebase_options.dart';
+=======
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme.dart';
@@ -9,6 +12,7 @@ import 'screens/report_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/community_screen.dart';
 import 'screens/fundraise_screen.dart';
+<<<<<<< HEAD
 import 'screens/cityinfo_screen.dart';
 import 'screens/mayor_dashboard_screen.dart';
 import 'widgets/shared_widgets.dart';
@@ -19,6 +23,16 @@ void main() async{
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+=======
+import 'screens/profile_screen.dart';
+import 'screens/cityinfo_screen.dart';
+import 'screens/mayor_dashboard_screen.dart';
+import 'widgets/shared_widgets.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
   runApp(const NagarPanchayatApp());
 }
 
@@ -49,9 +63,17 @@ class _RootState extends State<_Root> {
     user = u;
     tab = 'vote';
   });
+<<<<<<< HEAD
   void _logout() => setState(() {
     user = null;
   });
+=======
+  
+  void _logout() => setState(() {
+    user = null;
+  });
+  
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
   void _setTab(String t) => setState(() => tab = t);
 
   @override
@@ -59,6 +81,7 @@ class _RootState extends State<_Root> {
     if (user == null) return LoginScreen(onLogin: _login);
     return Scaffold(
       body: SafeArea(
+<<<<<<< HEAD
         child: Column(
           children: [
             _TopBar(user: user!, onLogout: _logout, setTab: _setTab),
@@ -68,6 +91,27 @@ class _RootState extends State<_Root> {
       ),
       // ARCHITECTURE FIX: Bottom nav remains visible on 'cityinfo'
       // Only hide the bottom navigation bar if the user is the Mayor
+=======
+        // THE ULTIMATE LAYOUT FIX
+        // This Stack ensures the TopBar has full permission to draw the dropdown menus
+        // anywhere on the screen, while the page content sits safely underneath.
+        child: Stack(
+          children: [
+            // 1. PAGE CONTENT (Pushed down by exactly 60 pixels to clear the top bar)
+            Positioned.fill(
+              top: 60, 
+              child: _page(),
+            ),
+            
+            // 2. TOP BAR & DROPDOWN MENUS (Takes the whole screen but is mostly transparent)
+            Positioned.fill(
+              child: _TopBar(user: user!, onLogout: _logout, setTab: _setTab),
+            ),
+          ],
+        ),
+      ),
+      // Hide the bottom navigation bar if the user is the Mayor
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
       bottomNavigationBar: user!.role == 'mayor'
           ? null
           : _BottomNav(active: tab, setTab: _setTab),
@@ -75,17 +119,26 @@ class _RootState extends State<_Root> {
   }
 
   Widget _page() {
+<<<<<<< HEAD
     // Both Citizen and Mayor can access the City Info page from the top bar
+=======
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     if (tab == 'cityinfo') {
       return const CityInfoScreen();
     }
 
+<<<<<<< HEAD
     // If the user is the Mayor, show the Mayor Dashboard instead of standard tabs!
+=======
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     if (user!.role == 'mayor') {
       return MayorDashboardScreen(user: user!);
     }
 
+<<<<<<< HEAD
     // Standard citizen routing
+=======
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     switch (tab) {
       case 'feed':
         return CommunityScreen(user: user!);
@@ -95,6 +148,11 @@ class _RootState extends State<_Root> {
         return const DashboardScreen();
       case 'fundraise':
         return const FundraiseScreen();
+<<<<<<< HEAD
+=======
+      case 'profile':
+        return ProfileScreen(user: user!, onLogout: _logout);
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
       default:
         return const VoteScreen();
     }
@@ -122,6 +180,7 @@ class _TopBarState extends State<_TopBar> {
   @override
   Widget build(BuildContext context) {
     return Stack(
+<<<<<<< HEAD
       clipBehavior: Clip.none,
       children: [
         Container(
@@ -266,6 +325,14 @@ class _TopBarState extends State<_TopBar> {
         if (showN || showP)
           Positioned.fill(
             top: 58,
+=======
+      children: [
+        // 1. CLICK-AWAY OVERLAY (Only visible when a menu is open)
+        // This catches clicks outside the dropdown to close it, without blocking the UI when closed.
+        if (showN || showP)
+          Positioned.fill(
+            top: 60, // Only covers the area below the top bar
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
             child: GestureDetector(
               onTap: () => setState(() {
                 showN = false;
@@ -274,6 +341,158 @@ class _TopBarState extends State<_TopBar> {
               child: Container(color: Colors.transparent),
             ),
           ),
+<<<<<<< HEAD
+=======
+
+        // 2. THE ACTUAL TOP BAR
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 60, // Fixed height for consistency
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 16,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.orange.withOpacity(0.15),
+                  width: 2,
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Logo
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: const LinearGradient(
+                      colors: [AppColors.orange, AppColors.orangeDark],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.orange.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.account_balance,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Nagar Panchayat',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                    Text(
+                      'Rampur · Digital Gov',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppColors.grey,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // City info
+                _IconBtn(
+                  icon: Icons.public,
+                  onTap: () {
+                    setState(() { showN = false; showP = false; });
+                    if (widget.user.role == 'mayor') {
+                      widget.setTab('dashboard'); 
+                    } else {
+                      widget.setTab('cityinfo');
+                    }
+                  },
+                ),
+                const SizedBox(width: 8),
+                // Notifications
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    _IconBtn(
+                      icon: Icons.notifications_outlined,
+                      onTap: () => setState(() {
+                        showN = !showN;
+                        showP = false;
+                      }),
+                    ),
+                    Positioned(
+                      top: 4,
+                      right: 0,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          color: AppColors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                // Avatar / profile
+                GestureDetector(
+                  onTap: () => setState(() {
+                    showP = !showP;
+                    showN = false;
+                  }),
+                  child: AppAvatar(
+                    initials: widget.user.avatar,
+                    color: AppColors.navy,
+                    size: 36,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // 3. THE DROPDOWN PANELS
+        if (showN)
+          Positioned(
+            top: 68, // Just below the Top Bar
+            right: 8,
+            child: _NotifPanel(onClose: () => setState(() => showN = false)),
+          ),
+        if (showP)
+          Positioned(
+            top: 68, // Just below the Top Bar
+            right: 8,
+            child: _ProfilePanel(
+              user: widget.user,
+              onClose: () => setState(() => showP = false),
+              onLogout: widget.onLogout,
+              setTab: widget.setTab,
+            ),
+          ),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
       ],
     );
   }
@@ -431,33 +650,62 @@ class _NotifPanel extends StatelessWidget {
 class _ProfilePanel extends StatelessWidget {
   final AppUser user;
   final VoidCallback onClose, onLogout;
+<<<<<<< HEAD
+=======
+  final Function(String) setTab;
+  
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
   const _ProfilePanel({
     required this.user,
     required this.onClose,
     required this.onLogout,
+<<<<<<< HEAD
   });
+=======
+    required this.setTab,
+  });
+  
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
   @override
   Widget build(BuildContext context) {
     return Material(
       elevation: 20,
       borderRadius: BorderRadius.circular(18),
+<<<<<<< HEAD
       child: Container(
         width: 210,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.border),
+=======
+      color: Colors.white,
+      clipBehavior: Clip.antiAlias, // Ensures InkWell ripples respect the rounded corners
+      child: Container(
+        width: 210,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(18),
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
+<<<<<<< HEAD
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColors.orangeLight, Colors.white],
                 ),
                 borderRadius: const BorderRadius.vertical(
+=======
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppColors.orangeLight, Colors.white],
+                ),
+                borderRadius: BorderRadius.vertical(
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
                   top: Radius.circular(18),
                 ),
               ),
@@ -496,6 +744,7 @@ class _ProfilePanel extends StatelessWidget {
                 ],
               ),
             ),
+<<<<<<< HEAD
             GestureDetector(
               onTap: onLogout,
               child: Container(
@@ -505,6 +754,45 @@ class _ProfilePanel extends StatelessWidget {
                     const Icon(Icons.logout, color: AppColors.red, size: 18),
                     const SizedBox(width: 8),
                     const Text(
+=======
+            
+            InkWell(
+              onTap: () {
+                onClose(); // Close the menu
+                setTab('profile'); // Navigate to the ProfileScreen
+              },
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_outline, color: AppColors.navy, size: 18),
+                    SizedBox(width: 10),
+                    Text(
+                      'My Profile',
+                      style: TextStyle(
+                        color: AppColors.navy,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const Divider(height: 1, color: AppColors.border),
+            
+            InkWell(
+              onTap: onLogout,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: AppColors.red, size: 18),
+                    SizedBox(width: 10),
+                    Text(
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
                       'Sign Out',
                       style: TextStyle(
                         color: AppColors.red,
@@ -593,15 +881,26 @@ class _BottomNav extends StatelessWidget {
                         ),
                       ],
                     ),
+<<<<<<< HEAD
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
+=======
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
                           Icons.people_outline,
                           color: Colors.white,
                           size: 24,
                         ),
+<<<<<<< HEAD
                         const Text(
+=======
+                        Text(
+>>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
                           'Community',
                           style: TextStyle(
                             color: Colors.white70,
