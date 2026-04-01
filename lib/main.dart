@@ -11,13 +11,11 @@ import 'screens/fundraise_screen.dart';
 import 'screens/cityinfo_screen.dart';
 import 'screens/mayor_dashboard_screen.dart';
 import 'widgets/shared_widgets.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: 'AIzaSyD-EXAMPLEKEY1234567890',
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  await Firebase.initializeApp();
   runApp(const NagarPanchayatApp());
 }
 
