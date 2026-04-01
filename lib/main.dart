@@ -1,3 +1,4 @@
+import 'package:e_governance/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'theme.dart';
@@ -13,9 +14,11 @@ import 'screens/mayor_dashboard_screen.dart';
 import 'widgets/shared_widgets.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-void main() async {
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const NagarPanchayatApp());
 }
 
