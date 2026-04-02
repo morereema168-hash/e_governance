@@ -3,10 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-<<<<<<< HEAD
+  cloud_firestore
+  firebase_auth
   firebase_core
-=======
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
+  firebase_storage
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

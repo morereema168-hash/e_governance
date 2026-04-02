@@ -5,13 +5,14 @@
 import FlutterMacOS
 import Foundation
 
-<<<<<<< HEAD
+import cloud_firestore
+import firebase_auth
 import firebase_core
+import firebase_storage
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
+  FLTFirebaseFirestorePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseFirestorePlugin"))
+  FLTFirebaseAuthPlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseAuthPlugin"))
   FLTFirebaseCorePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseCorePlugin"))
-=======
-
-func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
+  FLTFirebaseStoragePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseStoragePlugin"))
 }

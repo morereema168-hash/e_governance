@@ -3,21 +3,14 @@ import '../theme.dart';
 import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
 
-<<<<<<< HEAD
-class ReportScreen extends StatefulWidget {
-  final AppUser user;
-  const ReportScreen({super.key, required this.user});
-=======
 // ─────────────────────────────────────────────────────────────────────────────
 // ENHANCED ReportScreen
-// New form additions:
+// Features:
 //   • Severity picker (Low / Medium / High / Critical)
 //   • Photo / evidence upload placeholder
 //   • Preferred contact method (Call / WhatsApp / Email / No preference)
 //   • Best time to inspect (Morning / Afternoon / Evening / Anytime)
 //   • Stepped multi-page form (Step 1 → Step 2 → Step 3 → Review)
-//
-// New screen features:
 //   • Filter bar (All / Pending / In Progress / Resolved)
 //   • Search reports
 //   • Expandable report detail card
@@ -31,108 +24,63 @@ class ReportScreen extends StatefulWidget {
   final AppUser user;
   const ReportScreen({super.key, required this.user});
 
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
   @override
   State<ReportScreen> createState() => _ReportScreenState();
 }
 
-<<<<<<< HEAD
-class _ReportScreenState extends State<ReportScreen> {
-  final List<Report> myReports = [
-    Report(id: '1', dept: 'Water', title: 'No water for 3 days', desc: 'Ward 3 dry since Monday.', status: 'Pending', time: '1d ago', ticket: '#8831', ward: 'Ward 3'),
-    Report(id: '2', dept: 'Roads', title: 'Pothole near bus stop', desc: 'Dangerous pothole on MG Road.', status: 'In Progress', time: '2d ago', ticket: '#8832', ward: 'Ward 3'),
-    Report(id: '3', dept: 'Sanitation', title: 'Open drain near school', desc: 'Children at risk.', status: 'Resolved', time: '3d ago', ticket: '#8829', ward: 'Ward 3'),
-  ];
-  
-  bool showForm = false;
-  String selCat = 'Pothole';
-  String selDept = 'Roads';
-  final _titleCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
-  bool submitting = false;
-  bool submitted = false;
-
-  final deptColors = const {
-    'Water': AppColors.teal,
-    'Sanitation': AppColors.green,
-    'Electricity': AppColors.gold,
-    'Roads': AppColors.greyDark,
-    'Other': AppColors.purple
-  };
-  final cats = ['Streetlight', 'Water Leak', 'Pothole', 'Garbage', 'Drainage', 'Other'];
-  final depts = ['Water', 'Sanitation', 'Electricity', 'Roads', 'Other'];
-
-  void _submit() async {
-    if (_titleCtrl.text.isEmpty) return;
-    setState(() => submitting = true);
-    await Future.delayed(const Duration(milliseconds: 900));
-    setState(() {
-      myReports.insert(0, Report(
-          id: '${DateTime.now().millisecondsSinceEpoch}',
-          dept: selDept,
-          title: _titleCtrl.text,
-          desc: _descCtrl.text,
-          status: 'Pending',
-          time: 'Just now',
-          ticket: '#${8860 + myReports.length}',
-          ward: widget.user.ward));
-      submitting = false;
-      submitted = true;
-=======
 class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMixin {
   // ── DATA ──────────────────────────────────────────────────────────────────
   final List<Report> myReports = [
-    Report(id: '1', dept: 'Water',     title: 'No water for 3 days',    desc: 'Ward 3 dry since Monday.',          status: 'Pending',     time: '1d ago',  ticket: '#8831', ward: 'Ward 3'),
-    Report(id: '2', dept: 'Roads',     title: 'Pothole near bus stop',  desc: 'Dangerous pothole on MG Road.',     status: 'In Progress', time: '2d ago',  ticket: '#8832', ward: 'Ward 3'),
-    Report(id: '3', dept: 'Sanitation',title: 'Open drain near school', desc: 'Children at risk.',                 status: 'Resolved',    time: '3d ago',  ticket: '#8829', ward: 'Ward 3'),
+    Report(id: '1', dept: 'Water',      title: 'No water for 3 days',    desc: 'Ward 3 dry since Monday.',      status: 'Pending',     time: '1d ago', ticket: '#8831', ward: 'Ward 3'),
+    Report(id: '2', dept: 'Roads',      title: 'Pothole near bus stop',  desc: 'Dangerous pothole on MG Road.', status: 'In Progress', time: '2d ago', ticket: '#8832', ward: 'Ward 3'),
+    Report(id: '3', dept: 'Sanitation', title: 'Open drain near school', desc: 'Children at risk.',             status: 'Resolved',    time: '3d ago', ticket: '#8829', ward: 'Ward 3'),
   ];
 
-  // upvote counts keyed by report id
-  final Map<String, int>  _upvotes   = {'1': 4, '2': 11, '3': 2};
-  final Map<String, bool> _upvoted   = {};
-  final Set<String>       _expanded  = {};
+  final Map<String, int>  _upvotes  = {'1': 4, '2': 11, '3': 2};
+  final Map<String, bool> _upvoted  = {};
+  final Set<String>       _expanded = {};
 
   // ── UI STATE ──────────────────────────────────────────────────────────────
-  bool   showForm   = false;
-  bool   submitting = false;
-  bool   submitted  = false;
-  String filterStatus = 'All';
-  String searchQuery  = '';
+  bool   showForm      = false;
+  bool   submitting    = false;
+  bool   submitted     = false;
+  String filterStatus  = 'All';
+  String searchQuery   = '';
   final _searchCtrl = TextEditingController();
 
   // ── FORM STATE (multi-step) ───────────────────────────────────────────────
-  int    _step = 0;          // 0 = category/dept, 1 = details, 2 = meta, 3 = review
-  String selCat      = 'Pothole';
-  String selDept     = 'Roads';
-  String selSeverity = 'Medium';
-  String selContact  = 'WhatsApp';
-  String selTime     = 'Anytime';
-  bool   hasPhoto    = false; // placeholder – real impl would use image_picker
+  int    _step        = 0;
+  String selCat       = 'Pothole';
+  String selDept      = 'Roads';
+  String selSeverity  = 'Medium';
+  String selContact   = 'WhatsApp';
+  String selTime      = 'Anytime';
+  bool   hasPhoto     = false;
   final _titleCtrl = TextEditingController();
   final _descCtrl  = TextEditingController();
 
   // ── CONSTANTS ─────────────────────────────────────────────────────────────
   final deptColors = const {
-    'Water':      AppColors.teal,
-    'Sanitation': AppColors.green,
-    'Electricity':AppColors.gold,
-    'Roads':      AppColors.greyDark,
-    'Other':      AppColors.purple,
+    'Water':       AppColors.teal,
+    'Sanitation':  AppColors.green,
+    'Electricity': AppColors.gold,
+    'Roads':       AppColors.greyDark,
+    'Other':       AppColors.purple,
   };
 
-  final cats   = ['Streetlight','Water Leak','Pothole','Garbage','Drainage','Other'];
-  final depts  = ['Water','Sanitation','Electricity','Roads','Other'];
-  final filters = ['All','Pending','In Progress','Resolved'];
+  final cats    = ['Streetlight', 'Water Leak', 'Pothole', 'Garbage', 'Drainage', 'Other'];
+  final depts   = ['Water', 'Sanitation', 'Electricity', 'Roads', 'Other'];
+  final filters = ['All', 'Pending', 'In Progress', 'Resolved'];
 
   static const severityMeta = {
-    'Low':      {'color': Color(0xFF22C55E), 'icon': Icons.arrow_downward_rounded,  'desc': 'Minor inconvenience'},
-    'Medium':   {'color': Color(0xFFF59E0B), 'icon': Icons.remove_rounded,           'desc': 'Noticeable problem'},
-    'High':     {'color': Color(0xFFEF4444), 'icon': Icons.arrow_upward_rounded,     'desc': 'Urgent action needed'},
-    'Critical': {'color': Color(0xFF7C3AED), 'icon': Icons.priority_high_rounded,    'desc': 'Immediate danger'},
+    'Low':      {'color': Color(0xFF22C55E), 'icon': Icons.arrow_downward_rounded, 'desc': 'Minor inconvenience'},
+    'Medium':   {'color': Color(0xFFF59E0B), 'icon': Icons.remove_rounded,          'desc': 'Noticeable problem'},
+    'High':     {'color': Color(0xFFEF4444), 'icon': Icons.arrow_upward_rounded,    'desc': 'Urgent action needed'},
+    'Critical': {'color': Color(0xFF7C3AED), 'icon': Icons.priority_high_rounded,   'desc': 'Immediate danger'},
   };
 
-  static const contactOpts = ['Call','WhatsApp','Email','No preference'];
-  static const timeOpts    = ['Morning','Afternoon','Evening','Anytime'];
+  static const contactOpts = ['Call', 'WhatsApp', 'Email', 'No preference'];
+  static const timeOpts    = ['Morning', 'Afternoon', 'Evening', 'Anytime'];
 
   // ── HELPERS ───────────────────────────────────────────────────────────────
   List<Report> get filteredReports {
@@ -164,23 +112,10 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       _upvotes[newId] = 0;
       submitting = false;
       submitted  = true;
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     });
     await Future.delayed(const Duration(seconds: 2));
     setState(() {
       submitted = false;
-<<<<<<< HEAD
-      showForm = false;
-      _titleCtrl.clear();
-      _descCtrl.clear();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWide = screenWidth > 700;
-=======
       showForm  = false;
       _step     = 0;
       _titleCtrl.clear();
@@ -198,7 +133,8 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     setState(() => myReports.remove(r));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Report "${r.title}" withdrawn.', style: const TextStyle(fontFamily: 'Nunito')),
+        content: Text('Report "${r.title}" withdrawn.',
+            style: const TextStyle(fontFamily: 'Nunito')),
         action: SnackBarAction(
           label: 'UNDO',
           onPressed: () {
@@ -227,30 +163,22 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     });
   }
 
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _titleCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
   // ── BUILD ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 700;
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 80),
       child: Column(children: [
-<<<<<<< HEAD
-        // ── HEADER ──
-        PageHeader(
-          tag: 'OFFICIAL REPORTS',
-          title: 'Report an Issue',
-          sub: 'Sent → Department · Ward Rep · Mayor',
-          bottom: Row(children: [
-            AppBtn(label: '+ New Report', small: true, onTap: () => setState(() => showForm = true)),
-            const SizedBox(width: 8),
-            AppBtn(
-              label: 'My Reports (${myReports.length})',
-              small: true,
-              outline: true,
-              color: Colors.white,
-=======
         // HEADER
         PageHeader(
           tag:   'OFFICIAL REPORTS',
@@ -265,7 +193,6 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             AppBtn(
               label: 'My Reports (${myReports.length})',
               small: true, outline: true, color: Colors.white,
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
               onTap: () => setState(() => showForm = false),
             ),
           ]),
@@ -282,66 +209,6 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     );
   }
 
-<<<<<<< HEAD
-  // ── WIDE LAYOUT (PC): two-column side by side ──
-  Widget _wideLayout() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left column: form or stats (Animated)
-        Expanded(
-          flex: 5,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation),
-                child: child,
-              ),
-            ),
-            child: showForm 
-                ? _formPanel(key: const ValueKey('form')) 
-                : _statsPanel(key: const ValueKey('stats')),
-          ),
-        ),
-        const SizedBox(width: 20),
-        // Right column: reports list
-        Expanded(
-          flex: 6,
-          child: _reportsList(),
-        ),
-      ],
-    );
-  }
-
-  // ── NARROW LAYOUT (mobile): stacked with animation ──
-  Widget _narrowLayout() {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 400),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation),
-            child: child,
-          ),
-        );
-      },
-      child: showForm 
-          ? _formPanel(key: const ValueKey('form')) 
-          : _reportsList(key: const ValueKey('list')),
-    );
-  }
-
-  // ── STATS PANEL (shown on PC when form is hidden) ──
-  Widget _statsPanel({Key? key}) {
-    final total = myReports.length;
-    final resolved = myReports.where((r) => r.status == 'Resolved').length;
-    final pending = myReports.where((r) => r.status == 'Pending').length;
-=======
   // ── LAYOUTS ───────────────────────────────────────────────────────────────
   Widget _wideLayout() => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,7 +238,10 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   Widget _fadeSlide(Widget child, Animation<double> animation) => FadeTransition(
     opacity: animation,
     child: SlideTransition(
-      position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation),
+      position: Tween<Offset>(
+        begin: const Offset(0, 0.05),
+        end: Offset.zero,
+      ).animate(animation),
       child: child,
     ),
   );
@@ -381,46 +251,23 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     final total      = myReports.length;
     final resolved   = myReports.where((r) => r.status == 'Resolved').length;
     final pending    = myReports.where((r) => r.status == 'Pending').length;
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
     final inProgress = myReports.where((r) => r.status == 'In Progress').length;
 
     return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Overview', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, fontFamily: 'Nunito')),
+      const Text('Overview',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, fontFamily: 'Nunito')),
       const SizedBox(height: 14),
-<<<<<<< HEAD
-
-      // Stat cards grid
-      GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 2.2,
-        children: [
-          _statCard('Total', total.toString(), AppColors.orange, Icons.assignment_outlined),
-          _statCard('Resolved', resolved.toString(), AppColors.green, Icons.check_circle_outline),
-          _statCard('In Progress', inProgress.toString(), AppColors.blue, Icons.autorenew),
-          _statCard('Pending', pending.toString(), AppColors.gold, Icons.hourglass_empty),
-        ],
-      ),
-
-      const SizedBox(height: 16),
-
-      // Quick action card
-=======
       GridView.count(
         crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 2.2,
         children: [
-          _statCard('Total',       total.toString(),      AppColors.orange,   Icons.assignment_outlined),
-          _statCard('Resolved',    resolved.toString(),   AppColors.green,    Icons.check_circle_outline),
-          _statCard('In Progress', inProgress.toString(), AppColors.blue,     Icons.autorenew),
-          _statCard('Pending',     pending.toString(),    AppColors.gold,     Icons.hourglass_empty),
+          _statCard('Total',       total.toString(),      AppColors.orange, Icons.assignment_outlined),
+          _statCard('Resolved',    resolved.toString(),   AppColors.green,  Icons.check_circle_outline),
+          _statCard('In Progress', inProgress.toString(), AppColors.blue,   Icons.autorenew),
+          _statCard('Pending',     pending.toString(),    AppColors.gold,   Icons.hourglass_empty),
         ],
       ),
       const SizedBox(height: 16),
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
       AppCard(
         bgColor: AppColors.orangeLight,
         borderColor: AppColors.orange.withOpacity(0.3),
@@ -429,64 +276,57 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.orange, AppColors.orangeDark]),
+                gradient: const LinearGradient(
+                    colors: [AppColors.orange, AppColors.orangeDark]),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 22),
             ),
             const SizedBox(width: 12),
             const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('File a New Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
-              Text('Takes less than 2 minutes', style: TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
+              Text('File a New Report',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
+              Text('Takes less than 2 minutes',
+                  style: TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
             ])),
           ]),
           const SizedBox(height: 14),
-<<<<<<< HEAD
           AppBtn(
-            label: '+ New Report',
-            full: true,
-            onTap: () => setState(() => showForm = true),
+            label: '+ New Report', full: true,
+            onTap: () => setState(() { showForm = true; _step = 0; }),
           ),
         ]),
       ),
-
       const SizedBox(height: 10),
-
-      // Info card
-=======
-          AppBtn(label: '+ New Report', full: true, onTap: () => setState(() { showForm = true; _step = 0; })),
-        ]),
-      ),
-      const SizedBox(height: 10),
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
       AppCard(
         bgColor: AppColors.blueLight,
         borderColor: AppColors.blue.withOpacity(0.2),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('How it works', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: AppColors.blue, fontFamily: 'Nunito')),
+          const Text('How it works',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14,
+                  color: AppColors.blue, fontFamily: 'Nunito')),
           const SizedBox(height: 10),
           for (final step in [
-<<<<<<< HEAD
-            ['1', 'Choose category & department'],
-            ['2', 'Add title and details'],
-            ['3', 'Report is sent to dept, ward rep & mayor'],
-=======
             ['1', 'Choose category, department & severity'],
             ['2', 'Add title, details and optional photo'],
             ['3', 'Set contact preference & inspection time'],
             ['4', 'Review and submit – goes to dept, ward rep & mayor'],
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
           ])
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(children: [
                 Container(
                   width: 22, height: 22,
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.blue),
-                  child: Center(child: Text(step[0], style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900))),
+                  decoration: const BoxDecoration(
+                      shape: BoxShape.circle, color: AppColors.blue),
+                  child: Center(child: Text(step[0],
+                      style: const TextStyle(color: Colors.white, fontSize: 11,
+                          fontWeight: FontWeight.w900))),
                 ),
                 const SizedBox(width: 8),
-                Expanded(child: Text(step[1], style: const TextStyle(fontSize: 12, fontFamily: 'Nunito', color: AppColors.dark))),
+                Expanded(child: Text(step[1],
+                    style: const TextStyle(fontSize: 12, fontFamily: 'Nunito',
+                        color: AppColors.dark))),
               ]),
             ),
         ]),
@@ -494,275 +334,64 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     ]);
   }
 
-<<<<<<< HEAD
-  Widget _statCard(String label, String value, Color color, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border(top: BorderSide(color: color, width: 3)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12)],
-      ),
-      child: Row(children: [
-        Icon(icon, color: color, size: 22),
-        const SizedBox(width: 10),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color, fontFamily: 'Nunito')),
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.grey, fontFamily: 'Nunito')),
-        ]),
-      ]),
-    );
-  }
-
-  // ── FORM PANEL ──
-  Widget _formPanel({Key? key}) {
-    return Column(key: key, children: [
-      if (submitted)
-        AppCard(
-          child: Column(children: [
-            // Fun Elastic Bounce Animation for Success Checkmark
-            TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.elasticOut,
-              builder: (context, value, child) {
-                return Transform.scale(scale: value, child: child);
-              },
-              child: const Text('✅', style: TextStyle(fontSize: 64)),
-            ),
-            const SizedBox(height: 12),
-            const Text('Report Submitted!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.green, fontFamily: 'Nunito')),
-            const SizedBox(height: 4),
-            Text('Sent to $selDept Dept · Ward Rep · Mayor', style: const TextStyle(fontSize: 13, color: AppColors.grey, fontFamily: 'Nunito')),
-            const SizedBox(height: 8),
-          ])
-        )
-      else
-        AppCard(
-          borderColor: AppColors.orange.withOpacity(0.4),
-          borderWidth: 2,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text("What's the problem?", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Nunito')),
-            const SizedBox(height: 14),
-            // Category grid with bouncy selection
-            GridView.count(
-              crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.1,
-              children: cats.map((c) {
-                final isSelected = selCat == c;
-                return GestureDetector(
-                  onTap: () => setState(() => selCat = c),
-                  child: AnimatedScale(
-                    scale: isSelected ? 1.05 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOutBack,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.orangeLight : AppColors.bg,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isSelected ? AppColors.orange : AppColors.border, 
-                          width: isSelected ? 2 : 1
-                        ),
-                        boxShadow: isSelected 
-                            ? [BoxShadow(color: AppColors.orange.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))] 
-                            : [],
-                      ),
-                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        Icon(_catIcon(c), size: 24, color: isSelected ? AppColors.orange : AppColors.grey),
-                        const SizedBox(height: 6),
-                        Text(c, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isSelected ? AppColors.dark : AppColors.grey, fontFamily: 'Nunito'), textAlign: TextAlign.center),
-                      ]),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            const Text('DEPARTMENT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 6, runSpacing: 6,
-              children: depts.map((d) => AppChip(
-                label: d, color: deptColors[d] ?? AppColors.grey,
-                active: selDept == d, onTap: () => setState(() => selDept = d), small: true,
-              )).toList(),
-            ),
-            const SizedBox(height: 16),
-            MapWidget(label: '${widget.user.ward}, Rampur', height: 110),
-            const SizedBox(height: 16),
-            const Text('ISSUE TITLE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _titleCtrl, 
-              decoration: InputDecoration(
-                hintText: 'Brief title…',
-                filled: true,
-                fillColor: AppColors.bg,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ), 
-              style: const TextStyle(fontFamily: 'Nunito')
-            ),
-            const SizedBox(height: 12),
-            const Text('DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito')),
-            const SizedBox(height: 5),
-            TextField(
-              controller: _descCtrl, 
-              maxLines: 3, 
-              decoration: InputDecoration(
-                hintText: 'More details…',
-                filled: true,
-                fillColor: AppColors.bg,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ), 
-              style: const TextStyle(fontFamily: 'Nunito')
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.blueLight, borderRadius: BorderRadius.circular(12)),
-              child: Row(children: [
-                const Icon(Icons.send, color: AppColors.blue, size: 16),
-                const SizedBox(width: 8),
-                Expanded(child: Text(
-                  'Will be sent to: $selDept Department · ${widget.user.ward} Rep · Mayor',
-                  style: const TextStyle(fontSize: 12, color: AppColors.blue, fontFamily: 'Nunito', height: 1.4),
-                )),
-              ]),
-            ),
-            const SizedBox(height: 16),
-            AppBtn(label: submitting ? 'Submitting…' : 'Submit Official Report', full: true, disabled: submitting, onTap: _submit),
-          ]),
+  Widget _statCard(String label, String value, Color color, IconData icon) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border(top: BorderSide(color: color, width: 3)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12)],
         ),
-    ]);
-  }
-
-  // ── REPORTS LIST ──
-  Widget _reportsList({Key? key}) {
-    return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text('My Reports (${myReports.length})', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, fontFamily: 'Nunito')),
-        // Summary chips
-        Row(children: [
-          _miniChip('${myReports.where((r) => r.status == "Resolved").length} Resolved', AppColors.green),
-          const SizedBox(width: 6),
-          _miniChip('${myReports.where((r) => r.status == "Pending").length} Pending', AppColors.gold),
+        child: Row(children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 10),
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(value,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
+                    color: color, fontFamily: 'Nunito')),
+            Text(label,
+                style: const TextStyle(fontSize: 11, color: AppColors.grey,
+                    fontFamily: 'Nunito')),
+          ]),
         ]),
-      ]),
-      const SizedBox(height: 14),
-      
-      // Map over reports with a staggered entry animation
-      ...myReports.asMap().entries.map((entry) {
-        final index = entry.key;
-        final r = entry.value;
-        
-        return TweenAnimationBuilder<double>(
-          key: ValueKey(r.id), // Ensures new items animate when added
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOutCubic,
-          builder: (context, value, child) {
-            return Transform.translate(
-              // Slight slide up effect, delayed by index for a staggered feel
-              offset: Offset(0, 20 * (1 - value)),
-              child: Opacity(
-                opacity: value,
-                child: child,
-              ),
-            );
-          },
-          child: AppCard(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                AppChip(label: r.dept, color: deptColors[r.dept] ?? AppColors.grey, small: true),
-                StatusBadge(status: r.status),
-              ]),
-              const SizedBox(height: 8),
-              Text(r.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, fontFamily: 'Nunito')),
-              if (r.desc.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(r.desc, style: const TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
-              ],
-              const SizedBox(height: 8),
-              Text('${r.ticket} · ${r.ward} · ${r.time}', style: const TextStyle(fontSize: 11, color: AppColors.grey, fontFamily: 'Nunito')),
-              const SizedBox(height: 12),
-              AnimatedBar(value: statusProgress(r.status).toDouble(), color: r.status == 'Resolved' ? AppColors.green : AppColors.orange, height: 5),
-              const SizedBox(height: 6),
-              const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text('Filed', style: TextStyle(fontSize: 10, color: AppColors.grey, fontFamily: 'Nunito')),
-                Text('In Review', style: TextStyle(fontSize: 10, color: AppColors.grey, fontFamily: 'Nunito')),
-                Text('Resolved', style: TextStyle(fontSize: 10, color: AppColors.grey, fontFamily: 'Nunito')),
-              ]),
-            ]),
-          ),
-        );
-      }).toList(),
-    ]);
-  }
-
-  Widget _miniChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
-      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color, fontFamily: 'Nunito')),
-    );
-  }
-
-  IconData _catIcon(String c) {
-    switch(c){
-=======
-  Widget _statCard(String label, String value, Color color, IconData icon) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    decoration: BoxDecoration(
-      color: AppColors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border(top: BorderSide(color: color, width: 3)),
-      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12)],
-    ),
-    child: Row(children: [
-      Icon(icon, color: color, size: 22),
-      const SizedBox(width: 10),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color, fontFamily: 'Nunito')),
-        Text(label,  style: const TextStyle(fontSize: 11, color: AppColors.grey, fontFamily: 'Nunito')),
-      ]),
-    ]),
-  );
+      );
 
   // ── MULTI-STEP FORM ────────────────────────────────────────────────────────
   Widget _formPanel({Key? key}) {
     if (submitted) {
-      return AppCard(key: key, child: Column(children: [
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.elasticOut,
-          builder: (_, v, child) => Transform.scale(scale: v, child: child),
-          child: const Text('✅', style: TextStyle(fontSize: 64)),
-        ),
-        const SizedBox(height: 12),
-        const Text('Report Submitted!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.green, fontFamily: 'Nunito')),
-        const SizedBox(height: 4),
-        Text('Sent to $selDept Dept · ${widget.user.ward} Rep · Mayor',
-            style: const TextStyle(fontSize: 13, color: AppColors.grey, fontFamily: 'Nunito')),
-        const SizedBox(height: 8),
-      ]));
+      return AppCard(
+        key: key,
+        child: Column(children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 800),
+            curve: Curves.elasticOut,
+            builder: (_, v, child) => Transform.scale(scale: v, child: child),
+            child: const Text('✅', style: TextStyle(fontSize: 64)),
+          ),
+          const SizedBox(height: 12),
+          const Text('Report Submitted!',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
+                  color: AppColors.green, fontFamily: 'Nunito')),
+          const SizedBox(height: 4),
+          Text('Sent to $selDept Dept · ${widget.user.ward} Rep · Mayor',
+              style: const TextStyle(fontSize: 13, color: AppColors.grey,
+                  fontFamily: 'Nunito')),
+          const SizedBox(height: 8),
+        ]),
+      );
     }
 
     return Column(key: key, children: [
-      // Step indicator
       _stepIndicator(),
       const SizedBox(height: 14),
-      // Step content
       AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         transitionBuilder: _fadeSlide,
         child: _stepContent(),
       ),
       const SizedBox(height: 14),
-      // Nav buttons
       _stepNavRow(),
     ]);
   }
@@ -818,7 +447,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             },
           )
         : AppBtn(
-            label: submitting ? 'Submitting…' : 'Submit Report 🚀',
+            label: submitting ? 'Submitting…' : 'Submit Report ',
             disabled: submitting,
             onTap: _submitReport,
           )),
@@ -840,19 +469,32 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
           return GestureDetector(
             onTap: () => setState(() => selCat = c),
             child: AnimatedScale(
-              scale: sel ? 1.05 : 1.0, duration: const Duration(milliseconds: 200), curve: Curves.easeOutBack,
+              scale: sel ? 1.05 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
                   color: sel ? AppColors.orangeLight : AppColors.bg,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: sel ? AppColors.orange : AppColors.border, width: sel ? 2 : 1),
-                  boxShadow: sel ? [BoxShadow(color: AppColors.orange.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))] : [],
+                  border: Border.all(
+                      color: sel ? AppColors.orange : AppColors.border,
+                      width: sel ? 2 : 1),
+                  boxShadow: sel
+                      ? [BoxShadow(
+                          color: AppColors.orange.withOpacity(0.2),
+                          blurRadius: 8, offset: const Offset(0, 4))]
+                      : [],
                 ),
                 child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(_catIcon(c), size: 24, color: sel ? AppColors.orange : AppColors.grey),
+                  Icon(_catIcon(c), size: 24,
+                      color: sel ? AppColors.orange : AppColors.grey),
                   const SizedBox(height: 6),
-                  Text(c, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: sel ? AppColors.dark : AppColors.grey, fontFamily: 'Nunito'), textAlign: TextAlign.center),
+                  Text(c,
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
+                          color: sel ? AppColors.dark : AppColors.grey,
+                          fontFamily: 'Nunito'),
+                      textAlign: TextAlign.center),
                 ]),
               ),
             ),
@@ -866,15 +508,17 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
         spacing: 6, runSpacing: 6,
         children: depts.map((d) => AppChip(
           label: d, color: deptColors[d] ?? AppColors.grey,
-          active: selDept == d, onTap: () => setState(() => selDept = d), small: true,
+          active: selDept == d,
+          onTap: () => setState(() => selDept = d),
+          small: true,
         )).toList(),
       ),
       const SizedBox(height: 20),
       _sectionLabel('SEVERITY LEVEL'),
       const SizedBox(height: 10),
-      Row(children: ['Low','Medium','High','Critical'].map((s) {
-        final sel  = selSeverity == s;
-        final meta = severityMeta[s]!;
+      Row(children: ['Low', 'Medium', 'High', 'Critical'].map((s) {
+        final sel   = selSeverity == s;
+        final meta  = severityMeta[s]!;
         final color = meta['color'] as Color;
         return Expanded(child: Padding(
           padding: EdgeInsets.only(right: s != 'Critical' ? 6 : 0),
@@ -886,12 +530,18 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
               decoration: BoxDecoration(
                 color: sel ? color.withOpacity(0.12) : AppColors.bg,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: sel ? color : AppColors.border, width: sel ? 2 : 1),
+                border: Border.all(
+                    color: sel ? color : AppColors.border,
+                    width: sel ? 2 : 1),
               ),
               child: Column(children: [
-                Icon(meta['icon'] as IconData, color: sel ? color : AppColors.grey, size: 18),
+                Icon(meta['icon'] as IconData,
+                    color: sel ? color : AppColors.grey, size: 18),
                 const SizedBox(height: 4),
-                Text(s, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: sel ? color : AppColors.grey, fontFamily: 'Nunito')),
+                Text(s,
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                        color: sel ? color : AppColors.grey,
+                        fontFamily: 'Nunito')),
               ]),
             ),
           ),
@@ -899,7 +549,11 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       }).toList()),
       const SizedBox(height: 4),
       Text(severityMeta[selSeverity]!['desc'] as String,
-          style: TextStyle(fontSize: 11, color: (severityMeta[selSeverity]!['color'] as Color), fontFamily: 'Nunito', fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              fontSize: 11,
+              color: severityMeta[selSeverity]!['color'] as Color,
+              fontFamily: 'Nunito',
+              fontWeight: FontWeight.w600)),
     ]),
   );
 
@@ -915,10 +569,13 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       const SizedBox(height: 6),
       TextField(
         controller: _titleCtrl,
+        onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
           hintText: 'e.g. Pothole at junction near bus stop',
           filled: true, fillColor: AppColors.bg,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none),
         ),
         style: const TextStyle(fontFamily: 'Nunito'),
       ),
@@ -929,9 +586,12 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
         controller: _descCtrl,
         maxLines: 4,
         decoration: InputDecoration(
-          hintText: 'Describe the issue in detail – location landmarks, duration, affected residents…',
+          hintText:
+              'Describe the issue in detail – location landmarks, duration, affected residents…',
           filled: true, fillColor: AppColors.bg,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none),
         ),
         style: const TextStyle(fontFamily: 'Nunito'),
       ),
@@ -947,24 +607,27 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             color: hasPhoto ? AppColors.green.withOpacity(0.08) : AppColors.bg,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: hasPhoto ? AppColors.green : AppColors.border,
-              width: hasPhoto ? 2 : 1,
-              style: hasPhoto ? BorderStyle.solid : BorderStyle.solid,
-            ),
+                color: hasPhoto ? AppColors.green : AppColors.border,
+                width: hasPhoto ? 2 : 1),
           ),
           child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             Icon(hasPhoto ? Icons.check_circle_rounded : Icons.add_a_photo_outlined,
                 color: hasPhoto ? AppColors.green : AppColors.grey, size: 28),
             const SizedBox(height: 6),
             Text(hasPhoto ? 'Photo attached ✓' : 'Tap to attach photo or video',
-                style: TextStyle(fontSize: 12, fontFamily: 'Nunito', color: hasPhoto ? AppColors.green : AppColors.grey, fontWeight: FontWeight.w600)),
+                style: TextStyle(
+                    fontSize: 12, fontFamily: 'Nunito',
+                    color: hasPhoto ? AppColors.green : AppColors.grey,
+                    fontWeight: FontWeight.w600)),
           ])),
         ),
       ),
       if (_titleCtrl.text.isEmpty)
         const Padding(
           padding: EdgeInsets.only(top: 10),
-          child: Text('* Title is required to continue', style: TextStyle(fontSize: 11, color: AppColors.orange, fontFamily: 'Nunito')),
+          child: Text('* Title is required to continue',
+              style: TextStyle(fontSize: 11, color: AppColors.orange,
+                  fontFamily: 'Nunito')),
         ),
     ]),
   );
@@ -980,11 +643,14 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       Wrap(
         spacing: 8, runSpacing: 8,
         children: contactOpts.map((c) {
-          final sel = selContact == c;
-          final icon = c == 'Call'         ? Icons.phone_outlined
-                     : c == 'WhatsApp'     ? Icons.chat_bubble_outline
-                     : c == 'Email'        ? Icons.email_outlined
-                     :                       Icons.do_not_disturb_on_outlined;
+          final sel  = selContact == c;
+          final icon = c == 'Call'
+              ? Icons.phone_outlined
+              : c == 'WhatsApp'
+                  ? Icons.chat_bubble_outline
+                  : c == 'Email'
+                      ? Icons.email_outlined
+                      : Icons.do_not_disturb_on_outlined;
           return GestureDetector(
             onTap: () => setState(() => selContact = c),
             child: AnimatedContainer(
@@ -993,12 +659,18 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
               decoration: BoxDecoration(
                 color: sel ? AppColors.purple.withOpacity(0.1) : AppColors.bg,
                 borderRadius: BorderRadius.circular(30),
-                border: Border.all(color: sel ? AppColors.purple : AppColors.border, width: sel ? 2 : 1),
+                border: Border.all(
+                    color: sel ? AppColors.purple : AppColors.border,
+                    width: sel ? 2 : 1),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(icon, size: 15, color: sel ? AppColors.purple : AppColors.grey),
+                Icon(icon, size: 15,
+                    color: sel ? AppColors.purple : AppColors.grey),
                 const SizedBox(width: 6),
-                Text(c, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: sel ? AppColors.purple : AppColors.grey, fontFamily: 'Nunito')),
+                Text(c,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
+                        color: sel ? AppColors.purple : AppColors.grey,
+                        fontFamily: 'Nunito')),
               ]),
             ),
           );
@@ -1009,10 +681,13 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       const SizedBox(height: 8),
       Row(children: timeOpts.map((t) {
         final sel  = selTime == t;
-        final icon = t == 'Morning'   ? Icons.wb_sunny_outlined
-                   : t == 'Afternoon' ? Icons.wb_cloudy_outlined
-                   : t == 'Evening'   ? Icons.nights_stay_outlined
-                   :                    Icons.access_time;
+        final icon = t == 'Morning'
+            ? Icons.wb_sunny_outlined
+            : t == 'Afternoon'
+                ? Icons.wb_cloudy_outlined
+                : t == 'Evening'
+                    ? Icons.nights_stay_outlined
+                    : Icons.access_time;
         return Expanded(child: Padding(
           padding: EdgeInsets.only(right: t != 'Anytime' ? 6 : 0),
           child: GestureDetector(
@@ -1023,12 +698,17 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
               decoration: BoxDecoration(
                 color: sel ? AppColors.teal.withOpacity(0.1) : AppColors.bg,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: sel ? AppColors.teal : AppColors.border, width: sel ? 2 : 1),
+                border: Border.all(
+                    color: sel ? AppColors.teal : AppColors.border,
+                    width: sel ? 2 : 1),
               ),
               child: Column(children: [
                 Icon(icon, color: sel ? AppColors.teal : AppColors.grey, size: 20),
                 const SizedBox(height: 4),
-                Text(t, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, fontFamily: 'Nunito', color: sel ? AppColors.teal : AppColors.grey)),
+                Text(t,
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                        fontFamily: 'Nunito',
+                        color: sel ? AppColors.teal : AppColors.grey)),
               ]),
             ),
           ),
@@ -1043,264 +723,413 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
           const SizedBox(width: 8),
           Expanded(child: Text(
             'Officials will contact you via $selContact and aim to inspect during $selTime hours.',
-            style: const TextStyle(fontSize: 12, color: AppColors.blue, fontFamily: 'Nunito', height: 1.4),
+            style: const TextStyle(fontSize: 12, color: AppColors.blue,
+                fontFamily: 'Nunito', height: 1.4),
           )),
         ]),
       ),
     ]),
   );
 
-  // ── STEP 3: Review & Submit ────────────────────────────────────────────────
+  // ── STEP 3: Review ────────────────────────────────────────────────────────
   Widget _step3({Key? key}) => AppCard(
     key: key,
     borderColor: AppColors.green.withOpacity(0.4),
     borderWidth: 2,
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Review Your Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, fontFamily: 'Nunito')),
-      const SizedBox(height: 14),
-      _reviewRow('Category',    selCat,      Icons.category_outlined),
-      _reviewRow('Department',  selDept,     Icons.business_outlined),
-      _reviewRow('Severity',    selSeverity, Icons.warning_amber_outlined),
-      _reviewRow('Title',       _titleCtrl.text.isEmpty ? '(no title)' : _titleCtrl.text, Icons.title),
-      _reviewRow('Description', _descCtrl.text.isEmpty  ? '(no details)' : _descCtrl.text, Icons.notes),
-      _reviewRow('Photo',       hasPhoto ? 'Attached' : 'None',  Icons.photo_outlined),
-      _reviewRow('Contact',     selContact,  Icons.contact_phone_outlined),
-      _reviewRow('Inspect time',selTime,     Icons.schedule_outlined),
-      const Divider(height: 24),
-      AppCard(
-        bgColor: AppColors.blueLight,
-        borderColor: AppColors.blue.withOpacity(0.2),
+      // Header
+      Row(children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppColors.green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(Icons.fact_check_outlined,
+              color: AppColors.green, size: 22),
+        ),
+        const SizedBox(width: 12),
+        const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Review Your Report',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15,
+                  fontFamily: 'Nunito')),
+          Text('Check details before submitting',
+              style: TextStyle(fontSize: 12, color: AppColors.grey,
+                  fontFamily: 'Nunito')),
+        ]),
+      ]),
+      const SizedBox(height: 16),
+      const Divider(height: 1, color: AppColors.border),
+      const SizedBox(height: 16),
+
+      // Summary rows
+      _reviewRow('Category',   selCat,      Icons.category_outlined,        AppColors.orange),
+      _reviewRow('Department', selDept,     Icons.business_outlined,         deptColors[selDept] ?? AppColors.grey),
+      _reviewRow('Severity',   selSeverity, Icons.warning_amber_outlined,    severityMeta[selSeverity]!['color'] as Color),
+      _reviewRow('Title',      _titleCtrl.text.isEmpty ? '—' : _titleCtrl.text,
+                               Icons.title_outlined, AppColors.dark),
+      _reviewRow('Description',
+          _descCtrl.text.isEmpty ? 'No description provided' : _descCtrl.text,
+          Icons.description_outlined, AppColors.grey),
+      _reviewRow('Photo',      hasPhoto ? 'Attached ✓' : 'None',
+                               Icons.photo_outlined,
+                               hasPhoto ? AppColors.green : AppColors.grey),
+      _reviewRow('Contact',    selContact,  Icons.contact_phone_outlined,    AppColors.purple),
+      _reviewRow('Inspection', selTime,     Icons.schedule_outlined,         AppColors.teal),
+
+      const SizedBox(height: 16),
+      const Divider(height: 1, color: AppColors.border),
+      const SizedBox(height: 16),
+
+      // Destination info
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.navy.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.navy.withOpacity(0.15)),
+        ),
         child: Row(children: [
-          const Icon(Icons.send, color: AppColors.blue, size: 16),
+          const Icon(Icons.send_rounded, size: 16, color: AppColors.navy),
           const SizedBox(width: 8),
           Expanded(child: Text(
-            'Will be sent to: $selDept Department · ${widget.user.ward} Rep · Mayor',
-            style: const TextStyle(fontSize: 12, color: AppColors.blue, fontFamily: 'Nunito', height: 1.4),
+            'Will be sent to: $selDept Department · ${widget.user.ward} Rep · Mayor\'s Office',
+            style: const TextStyle(fontSize: 12, fontFamily: 'Nunito',
+                color: AppColors.navy, fontWeight: FontWeight.w700, height: 1.4),
           )),
         ]),
       ),
     ]),
   );
 
-  Widget _reviewRow(String label, String value, IconData icon) => Padding(
-    padding: const EdgeInsets.only(bottom: 10),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(icon, size: 16, color: AppColors.grey),
-      const SizedBox(width: 8),
-      SizedBox(width: 90, child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito'))),
-      Expanded(child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, fontFamily: 'Nunito', color: AppColors.dark))),
-    ]),
-  );
-
-  // ── REPORTS SECTION (list + search + filter) ───────────────────────────────
-  Widget _reportsSection({Key? key}) => Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-    // Title row
-    Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text('My Reports (${myReports.length})', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, fontFamily: 'Nunito')),
-      Row(children: [
-        _miniChip('${myReports.where((r) => r.status == "Resolved").length} Resolved', AppColors.green),
-        const SizedBox(width: 6),
-        _miniChip('${myReports.where((r) => r.status == "Pending").length} Pending', AppColors.gold),
-      ]),
-    ]),
-    const SizedBox(height: 12),
-
-    // Search bar
-    TextField(
-      controller: _searchCtrl,
-      onChanged: (v) => setState(() => searchQuery = v),
-      decoration: InputDecoration(
-        hintText: 'Search reports…',
-        hintStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 13),
-        prefixIcon: const Icon(Icons.search, size: 20),
-        suffixIcon: searchQuery.isNotEmpty
-            ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchCtrl.clear(); setState(() => searchQuery = ''); })
-            : null,
-        filled: true, fillColor: AppColors.bg,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      ),
-      style: const TextStyle(fontFamily: 'Nunito', fontSize: 13),
-    ),
-    const SizedBox(height: 10),
-
-    // Filter chips
-    SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(children: filters.map((f) {
-        final active = filterStatus == f;
-        return Padding(
-          padding: const EdgeInsets.only(right: 6),
-          child: GestureDetector(
-            onTap: () => setState(() => filterStatus = f),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                color: active ? AppColors.orange : AppColors.bg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: active ? AppColors.orange : AppColors.border),
-              ),
-              child: Text(f, style: TextStyle(
-                fontSize: 12, fontFamily: 'Nunito', fontWeight: FontWeight.w700,
-                color: active ? Colors.white : AppColors.grey,
-              )),
-            ),
-          ),
-        );
-      }).toList()),
-    ),
-    const SizedBox(height: 14),
-
-    // Report cards
-    if (filteredReports.isEmpty)
-      AppCard(child: Center(child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          const Icon(Icons.inbox_outlined, size: 36, color: AppColors.grey),
-          const SizedBox(height: 8),
-          Text('No reports match "$filterStatus"', style: const TextStyle(color: AppColors.grey, fontFamily: 'Nunito')),
+  Widget _reviewRow(String label, String value, IconData icon, Color color) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 10),
+          SizedBox(width: 90,
+            child: Text(label,
+                style: const TextStyle(fontSize: 12, color: AppColors.grey,
+                    fontFamily: 'Nunito', fontWeight: FontWeight.w600))),
+          Expanded(child: Text(value,
+              style: const TextStyle(fontSize: 12, fontFamily: 'Nunito',
+                  fontWeight: FontWeight.w800, color: AppColors.dark))),
         ]),
-      )))
-    else
-      ...filteredReports.asMap().entries.map((entry) {
-        final r         = entry.value;
-        final isExpanded = _expanded.contains(r.id);
-        final votes     = _upvotes[r.id] ?? 0;
-        final voted     = _upvoted[r.id] == true;
+      );
 
-        return TweenAnimationBuilder<double>(
-          key: ValueKey(r.id),
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 500),
-          curve: Curves.easeOutCubic,
-          builder: (_, v, child) => Transform.translate(
-            offset: Offset(0, 20 * (1 - v)),
-            child: Opacity(opacity: v, child: child),
+  // ── REPORTS LIST SECTION ───────────────────────────────────────────────────
+  Widget _reportsSection({Key? key}) {
+    return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // Search bar
+      Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.bg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: TextField(
+          controller: _searchCtrl,
+          onChanged: (val) => setState(() => searchQuery = val),
+          decoration: const InputDecoration(
+            hintText: 'Search reports…',
+            hintStyle: TextStyle(fontSize: 13, fontFamily: 'Nunito',
+                color: AppColors.grey),
+            prefixIcon: Icon(Icons.search, size: 18, color: AppColors.grey),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(vertical: 12),
           ),
-          child: GestureDetector(
-            onTap: () => setState(() => isExpanded ? _expanded.remove(r.id) : _expanded.add(r.id)),
-            child: AppCard(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                // Top row: dept chip + status badge
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  AppChip(label: r.dept, color: deptColors[r.dept] ?? AppColors.grey, small: true),
-                  Row(children: [
-                    StatusBadge(status: r.status),
-                    const SizedBox(width: 8),
-                    Icon(isExpanded ? Icons.expand_less : Icons.expand_more, size: 18, color: AppColors.grey),
-                  ]),
-                ]),
-                const SizedBox(height: 8),
-                Text(r.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, fontFamily: 'Nunito')),
+          style: const TextStyle(fontSize: 13, fontFamily: 'Nunito'),
+        ),
+      ),
+      const SizedBox(height: 12),
 
-                // Expandable detail
+      // Filter chips
+      SizedBox(height: 36, child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: filters.map((f) {
+          final count = f == 'All'
+              ? myReports.length
+              : myReports.where((r) => r.status == f).length;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: AppChip(
+              label: '$f ($count)',
+              color: _filterColor(f),
+              active: filterStatus == f,
+              onTap: () => setState(() => filterStatus = f),
+              small: true,
+            ),
+          );
+        }).toList(),
+      )),
+      const SizedBox(height: 12),
+
+      // Count
+      Text('${filteredReports.length} report${filteredReports.length != 1 ? 's' : ''} found',
+          style: const TextStyle(fontSize: 12, color: AppColors.grey,
+              fontFamily: 'Nunito')),
+      const SizedBox(height: 10),
+
+      // Report cards
+      if (filteredReports.isEmpty)
+        _emptyState()
+      else
+        ...filteredReports.asMap().entries.map((entry) {
+          final r         = entry.value;
+          final isExpanded = _expanded.contains(r.id);
+          final sc        = _statusColor(r.status);
+
+          return TweenAnimationBuilder<double>(
+            key: ValueKey(r.id),
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutQuad,
+            builder: (context, val, child) => Transform.translate(
+              offset: Offset(0, 12 * (1 - val)),
+              child: Opacity(opacity: val, child: child),
+            ),
+            child: AppCard(
+              onTap: () => setState(() {
+                isExpanded ? _expanded.remove(r.id) : _expanded.add(r.id);
+              }),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                // Top row
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: (deptColors[r.dept] ?? AppColors.grey).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(_deptIcon(r.dept), size: 16,
+                        color: deptColors[r.dept] ?? AppColors.grey),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(r.title,
+                        style: const TextStyle(fontWeight: FontWeight.w900,
+                            fontSize: 14, fontFamily: 'Nunito')),
+                    Text('${r.dept} · ${r.ticket} · ${r.time}',
+                        style: const TextStyle(fontSize: 11, color: AppColors.grey,
+                            fontFamily: 'Nunito')),
+                  ])),
+                  StatusBadge(status: r.status),
+                ]),
+
+                // Progress bar for In Progress
+                if (r.status == 'In Progress') ...[
+                  const SizedBox(height: 10),
+                  AnimatedBar(value: 50, color: AppColors.blue, height: 5),
+                ],
+
+                // Expanded detail
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutCubic,
                   child: isExpanded
                       ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          const SizedBox(height: 14),
+                          const Divider(height: 1, color: AppColors.border),
+                          const SizedBox(height: 14),
+
+                          // Description
                           if (r.desc.isNotEmpty) ...[
-                            const SizedBox(height: 6),
-                            Text(r.desc, style: const TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
+                            Text(r.desc,
+                                style: const TextStyle(fontSize: 13,
+                                    fontFamily: 'Nunito', color: AppColors.dark,
+                                    height: 1.5)),
+                            const SizedBox(height: 14),
                           ],
-                          const SizedBox(height: 10),
-                          // Severity indicator (stored in report if you extend model, shown from current form for newly added)
+
+                          // Ward info
                           Row(children: [
-                            const Icon(Icons.label_outline, size: 13, color: AppColors.grey),
+                            const Icon(Icons.location_on_outlined,
+                                size: 14, color: AppColors.grey),
                             const SizedBox(width: 4),
-                            Text('${r.ticket} · ${r.ward} · ${r.time}',
-                                style: const TextStyle(fontSize: 11, color: AppColors.grey, fontFamily: 'Nunito')),
+                            Text(r.ward,
+                                style: const TextStyle(fontSize: 12,
+                                    color: AppColors.grey, fontFamily: 'Nunito')),
+                          ]),
+                          const SizedBox(height: 14),
+
+                          // Action row
+                          Row(children: [
+                            // Upvote
+                            GestureDetector(
+                              onTap: () => _toggleUpvote(r.id),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: (_upvoted[r.id] == true)
+                                      ? AppColors.orange.withOpacity(0.12)
+                                      : AppColors.bg,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: (_upvoted[r.id] == true)
+                                        ? AppColors.orange
+                                        : AppColors.border,
+                                  ),
+                                ),
+                                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                                  Icon(
+                                    (_upvoted[r.id] == true)
+                                        ? Icons.thumb_up_rounded
+                                        : Icons.thumb_up_outlined,
+                                    size: 14,
+                                    color: (_upvoted[r.id] == true)
+                                        ? AppColors.orange
+                                        : AppColors.grey,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text('${_upvotes[r.id] ?? 0}',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800,
+                                          color: (_upvoted[r.id] == true)
+                                              ? AppColors.orange
+                                              : AppColors.grey,
+                                          fontFamily: 'Nunito')),
+                                ]),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+
+                            // Share
+                            _iconAction(Icons.share_outlined, AppColors.blue, () {}),
+                            const SizedBox(width: 8),
+
+                            const Spacer(),
+
+                            // Delete (only Pending)
+                            if (r.status == 'Pending')
+                              GestureDetector(
+                                onTap: () => _deleteReport(r),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.red.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                        color: AppColors.red.withOpacity(0.3)),
+                                  ),
+                                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                    Icon(Icons.delete_outline,
+                                        size: 14, color: AppColors.red),
+                                    SizedBox(width: 4),
+                                    Text('Withdraw',
+                                        style: TextStyle(fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppColors.red,
+                                            fontFamily: 'Nunito')),
+                                  ]),
+                                ),
+                              ),
                           ]),
                         ])
                       : const SizedBox.shrink(),
                 ),
 
-                const SizedBox(height: 10),
-                AnimatedBar(value: statusProgress(r.status).toDouble(), color: r.status == 'Resolved' ? AppColors.green : AppColors.orange, height: 5),
-                const SizedBox(height: 6),
-                const Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text('Filed',     style: TextStyle(fontSize: 10, color: AppColors.grey, fontFamily: 'Nunito')),
-                  Text('In Review', style: TextStyle(fontSize: 10, color: AppColors.grey, fontFamily: 'Nunito')),
-                  Text('Resolved',  style: TextStyle(fontSize: 10, color: AppColors.grey, fontFamily: 'Nunito')),
-                ]),
-                const SizedBox(height: 12),
-
-                // Action row: upvote + withdraw
-                Row(children: [
-                  // Upvote
-                  GestureDetector(
-                    onTap: () => _toggleUpvote(r.id),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: voted ? AppColors.orange.withOpacity(0.12) : AppColors.bg,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: voted ? AppColors.orange : AppColors.border),
-                      ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(voted ? Icons.thumb_up : Icons.thumb_up_outlined,
-                            size: 13, color: voted ? AppColors.orange : AppColors.grey),
-                        const SizedBox(width: 4),
-                        Text('$votes others', style: TextStyle(
-                            fontSize: 11, fontFamily: 'Nunito', fontWeight: FontWeight.w700,
-                            color: voted ? AppColors.orange : AppColors.grey)),
-                      ]),
-                    ),
+                // Expand indicator
+                const SizedBox(height: 8),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Icon(
+                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    size: 18, color: AppColors.grey,
                   ),
-                  const Spacer(),
-                  // Withdraw (only for Pending)
-                  if (r.status == 'Pending')
-                    GestureDetector(
-                      onTap: () => _deleteReport(r),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: AppColors.bg,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(Icons.close_rounded, size: 13, color: AppColors.grey),
-                          const SizedBox(width: 4),
-                          Text('Withdraw', style: TextStyle(fontSize: 11, fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: AppColors.grey)),
-                        ]),
-                      ),
-                    ),
                 ]),
               ]),
             ),
-          ),
-        );
-      }),
-  ]);
+          );
+        }).toList(),
+    ]);
+  }
 
-  // ── UTILITIES ─────────────────────────────────────────────────────────────
-  Widget _sectionLabel(String text) => Text(text,
-      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito'));
-
-  Widget _miniChip(String label, Color color) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
-    child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color, fontFamily: 'Nunito')),
+  Widget _emptyState() => Container(
+    padding: const EdgeInsets.symmetric(vertical: 40),
+    child: Column(children: [
+      Icon(Icons.inbox_outlined, size: 48, color: AppColors.grey.withOpacity(0.4)),
+      const SizedBox(height: 12),
+      Text(
+        searchQuery.isNotEmpty
+            ? 'No reports match "$searchQuery"'
+            : 'No ${filterStatus == 'All' ? '' : filterStatus.toLowerCase()} reports yet',
+        style: const TextStyle(fontSize: 14, color: AppColors.grey,
+            fontFamily: 'Nunito', fontWeight: FontWeight.w600),
+        textAlign: TextAlign.center,
+      ),
+      const SizedBox(height: 16),
+      AppBtn(
+        label: '+ File a Report', small: true,
+        onTap: () => setState(() { showForm = true; _step = 0; }),
+      ),
+    ]),
   );
 
-  IconData _catIcon(String c) {
-    switch (c) {
->>>>>>> 0bb83b382137fe82d4c3281e06b68288b7424ccc
+  Widget _iconAction(IconData icon, Color color, VoidCallback onTap) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withOpacity(0.25)),
+          ),
+          child: Icon(icon, size: 14, color: color),
+        ),
+      );
+
+  // ── SMALL HELPERS ──────────────────────────────────────────────────────────
+  Widget _sectionLabel(String text) => Text(text,
+      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
+          color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito'));
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'Resolved':    return AppColors.green;
+      case 'In Progress': return AppColors.blue;
+      default:            return AppColors.gold;
+    }
+  }
+
+  Color _filterColor(String f) {
+    switch (f) {
+      case 'Resolved':    return AppColors.green;
+      case 'In Progress': return AppColors.blue;
+      case 'Pending':     return AppColors.gold;
+      default:            return AppColors.orange;
+    }
+  }
+
+  IconData _catIcon(String cat) {
+    switch (cat) {
       case 'Streetlight': return Icons.lightbulb_outline;
       case 'Water Leak':  return Icons.water_drop_outlined;
       case 'Pothole':     return Icons.warning_amber_outlined;
       case 'Garbage':     return Icons.delete_outline;
-      case 'Drainage':    return Icons.waves;
-      default:            return Icons.more_horiz;
+      case 'Drainage':    return Icons.water_outlined;
+      default:            return Icons.help_outline;
+    }
+  }
+
+  IconData _deptIcon(String dept) {
+    switch (dept) {
+      case 'Water':       return Icons.water_drop_outlined;
+      case 'Sanitation':  return Icons.delete_sweep_outlined;
+      case 'Electricity': return Icons.bolt_outlined;
+      case 'Roads': return Icons.add_road_outlined;
+      default:            return Icons.business_outlined;
     }
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NEW: LIVE NEWS TICKER WIDGET
+// TRENDING TICKER
 // ─────────────────────────────────────────────────────────────────────────────
 class _TrendingTicker extends StatefulWidget {
   const _TrendingTicker();
@@ -1309,67 +1138,74 @@ class _TrendingTicker extends StatefulWidget {
   State<_TrendingTicker> createState() => _TrendingTickerState();
 }
 
-class _TrendingTickerState extends State<_TrendingTicker> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  
-  // The string is repeated inside the builder to create an infinite loop effect
-  final String _text = "🚨 TOP ISSUES THIS WEEK:   •   🚰 Water scarcity in Ward 3 (152 reports)   •   🚧 Severe potholes on MG Road (89 reports)   •   💡 Streetlight outage in Ward 7 (45 reports)   •   🗑️ Missed garbage collection in Ward 1 (30 reports)        ";
+class _TrendingTickerState extends State<_TrendingTicker>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<Offset> _slide;
+
+  static const _items = [
+    '🔴 Ward 3: 38 open water complaints this week',
+    '🟡 MG Road pothole cluster – 11 upvotes',
+    '🟢 Sector 5 drainage – marked Resolved today',
+    '🔵 New: LED street-light tender awarded',
+
+  ];
+
+  int _current = 0;
 
   @override
   void initState() {
     super.initState();
-    // 25 seconds for a full loop. Increase duration to slow it down.
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 25))..repeat();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+    _slide = Tween<Offset>(
+            begin: const Offset(0, 1), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _ctrl.forward();
+    _startLoop();
+  }
+
+  void _startLoop() async {
+    while (mounted) {
+      await Future.delayed(const Duration(seconds: 4));
+      if (!mounted) return;
+      await _ctrl.reverse();
+      setState(() => _current = (_current + 1) % _items.length);
+      _ctrl.forward();
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: const BoxDecoration(
-        color: AppColors.navy, // Using navy for a premium news-ticker look
-        border: Border(
-          bottom: BorderSide(color: AppColors.orange, width: 2), // Accent strip
+      color: AppColors.navy,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+              color: AppColors.orange,
+              borderRadius: BorderRadius.circular(4)),
+          child: const Text('LIVE',
+              style: TextStyle(color: Colors.white, fontSize: 10,
+                  fontWeight: FontWeight.w900, fontFamily: 'Nunito',
+                  letterSpacing: 1)),
         ),
-      ),
-      child: ClipRect(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(), // User shouldn't scroll it manually
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return FractionalTranslation(
-                // Translates exactly half the width of the row to make the duplicated text loop seamlessly
-                translation: Offset(-_controller.value * 0.5, 0),
-                child: child,
-              );
-            },
-            child: Row(
-              children: [
-                // We double the text here so the FractionalTranslation can loop perfectly
-                Text(
-                  _text + _text, 
-                  style: const TextStyle(
-                    fontSize: 12, 
-                    fontWeight: FontWeight.w800, 
-                    color: Colors.white, 
-                    fontFamily: 'Nunito',
-                    letterSpacing: 0.5
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+        const SizedBox(width: 10),
+        Expanded(child: ClipRect(child: SlideTransition(
+          position: _slide,
+          child: Text(_items[_current],
+              style: const TextStyle(color: Colors.white70, fontSize: 12,
+                  fontFamily: 'Nunito'),
+              maxLines: 1, overflow: TextOverflow.ellipsis),
+        ))),
+      ]),
     );
   }
 }
