@@ -19,6 +19,7 @@ import '../widgets/shared_widgets.dart';
 //   • Delete / withdraw a report (with undo snackbar)
 //   • Upvote similar issues
 //   • Summary analytics panel (wide layout)
+//   • LIVE NEWS TICKER for top trending issues
 // ─────────────────────────────────────────────────────────────────────────────
 
 class ReportScreen extends StatefulWidget {
@@ -32,9 +33,9 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMixin {
   // ── DATA ──────────────────────────────────────────────────────────────────
   final List<Report> myReports = [
-    Report(id: '1', dept: 'Water',     title: 'No water for 3 days',     desc: 'Ward 3 dry since Monday.',          status: 'Pending',     time: '1d ago',  ticket: '#8831', ward: 'Ward 3'),
-    Report(id: '2', dept: 'Roads',     title: 'Pothole near bus stop',   desc: 'Dangerous pothole on MG Road.',     status: 'In Progress', time: '2d ago',  ticket: '#8832', ward: 'Ward 3'),
-    Report(id: '3', dept: 'Sanitation',title: 'Open drain near school',  desc: 'Children at risk.',                  status: 'Resolved',    time: '3d ago',  ticket: '#8829', ward: 'Ward 3'),
+    Report(id: '1', dept: 'Water',     title: 'No water for 3 days',    desc: 'Ward 3 dry since Monday.',          status: 'Pending',     time: '1d ago',  ticket: '#8831', ward: 'Ward 3'),
+    Report(id: '2', dept: 'Roads',     title: 'Pothole near bus stop',  desc: 'Dangerous pothole on MG Road.',     status: 'In Progress', time: '2d ago',  ticket: '#8832', ward: 'Ward 3'),
+    Report(id: '3', dept: 'Sanitation',title: 'Open drain near school', desc: 'Children at risk.',                 status: 'Resolved',    time: '3d ago',  ticket: '#8829', ward: 'Ward 3'),
   ];
 
   // upvote counts keyed by report id
@@ -190,6 +191,9 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             ),
           ]),
         ),
+
+        // ── LIVE NEWS TICKER ──
+        const _TrendingTicker(),
 
         Padding(
           padding: EdgeInsets.all(isWide ? 24 : 14),
@@ -606,7 +610,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
         final icon = t == 'Morning'   ? Icons.wb_sunny_outlined
                    : t == 'Afternoon' ? Icons.wb_cloudy_outlined
                    : t == 'Evening'   ? Icons.nights_stay_outlined
-                   :                   Icons.access_time;
+                   :                    Icons.access_time;
         return Expanded(child: Padding(
           padding: EdgeInsets.only(right: t != 'Anytime' ? 6 : 0),
           child: GestureDetector(
@@ -857,7 +861,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
                         ),
                         child: const Row(mainAxisSize: MainAxisSize.min, children: [
                           Icon(Icons.close_rounded, size: 13, color: AppColors.grey),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text('Withdraw', style: TextStyle(fontSize: 11, fontFamily: 'Nunito', fontWeight: FontWeight.w700, color: AppColors.grey)),
                         ]),
                       ),
@@ -889,5 +893,80 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       case 'Drainage':    return Icons.waves;
       default:            return Icons.more_horiz;
     }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NEW: LIVE NEWS TICKER WIDGET
+// ─────────────────────────────────────────────────────────────────────────────
+class _TrendingTicker extends StatefulWidget {
+  const _TrendingTicker();
+
+  @override
+  State<_TrendingTicker> createState() => _TrendingTickerState();
+}
+
+class _TrendingTickerState extends State<_TrendingTicker> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  
+  // The string is repeated inside the builder to create an infinite loop effect
+  final String _text = "🚨 TOP ISSUES THIS WEEK:   •   🚰 Water scarcity in Ward 3 (152 reports)   •   🚧 Severe potholes on MG Road (89 reports)   •   💡 Streetlight outage in Ward 7 (45 reports)   •   🗑️ Missed garbage collection in Ward 1 (30 reports)        ";
+
+  @override
+  void initState() {
+    super.initState();
+    // 25 seconds for a full loop. Increase duration to slow it down.
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 25))..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: const BoxDecoration(
+        color: AppColors.navy, // Using navy for a premium news-ticker look
+        border: Border(
+          bottom: BorderSide(color: AppColors.orange, width: 2), // Accent strip
+        ),
+      ),
+      child: ClipRect(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(), // User shouldn't scroll it manually
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return FractionalTranslation(
+                // Translates exactly half the width of the row to make the duplicated text loop seamlessly
+                translation: Offset(-_controller.value * 0.5, 0),
+                child: child,
+              );
+            },
+            child: Row(
+              children: [
+                // We double the text here so the FractionalTranslation can loop perfectly
+                Text(
+                  _text + _text, 
+                  style: const TextStyle(
+                    fontSize: 12, 
+                    fontWeight: FontWeight.w800, 
+                    color: Colors.white, 
+                    fontFamily: 'Nunito',
+                    letterSpacing: 0.5
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
