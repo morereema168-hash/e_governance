@@ -8,7 +8,8 @@ class AppUser {
 
 const Map<String,AppUser> USERS = {
   'mayor@np.gov':   AppUser(email:'mayor@np.gov',  role:'mayor',      name:'Mayor Ramesh Patil',  avatar:'RP',ward:'All'),
-  'sevak@np.gov':   AppUser(email:'sevak@np.gov',  role:'nagarsevak', name:'Sevak Sunita Jadhav', avatar:'SJ',ward:'Ward 3'),
+  // ── FIX APPLIED HERE: Changed 'nagarsevak' to 'nagar_sevak' ──
+  'sevak@np.gov':   AppUser(email:'sevak@np.gov',  role:'nagar_sevak', name:'Sevak Sunita Jadhav', avatar:'SJ',ward:'Ward 3'),
   'water@dept.gov': AppUser(email:'water@dept.gov',role:'department', name:'Water Dept Officer',  avatar:'WD',ward:'All'),
   'amit@gmail.com': AppUser(email:'amit@gmail.com',role:'citizen',    name:'Amit Sharma',         avatar:'AS',ward:'Ward 3'),
 };

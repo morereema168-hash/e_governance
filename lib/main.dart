@@ -13,6 +13,8 @@ import 'screens/fundraise_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/cityinfo_screen.dart';
 import 'screens/mayor_dashboard_screen.dart';
+// 1. ADDED: Import your new Nagar Sevak dashboard
+import 'screens/nagar_sevak_dashboard.dart'; 
 import 'widgets/shared_widgets.dart';
 
 void main() async {
@@ -84,15 +86,15 @@ class _RootState extends State<_Root> {
           ],
         ),
       ),
-      // Hide the bottom navigation bar if the user is the Mayor
-      bottomNavigationBar: user!.role == 'mayor'
+      // 2. UPDATED: Hide the bottom navigation bar if the user is the Mayor OR Nagar Sevak
+      bottomNavigationBar: (user!.role == 'mayor' || user!.role == 'nagar_sevak')
           ? null
           : _BottomNav(active: tab, setTab: _setTab),
     );
   }
 
   Widget _page() {
-    // Both Citizen and Mayor can access the City Info page from the top bar
+    // Both Citizen, Mayor, and Nagar Sevak can access the City Info page from the top bar
     if (tab == 'cityinfo') {
       return const CityInfoScreen();
     }
@@ -100,6 +102,11 @@ class _RootState extends State<_Root> {
     // If the user is the Mayor, show the Mayor Dashboard instead of standard tabs!
     if (user!.role == 'mayor') {
       return MayorDashboardScreen(user: user!);
+    }
+
+    // 3. ADDED: If the user is the Nagar Sevak, show the Nagar Sevak Dashboard!
+    if (user!.role == 'nagar_sevak') {
+      return NagarSevakDashboard(user: user!);
     }
 
     // Standard citizen routing
@@ -234,7 +241,8 @@ class _TopBarState extends State<_TopBar> {
                   icon: Icons.public,
                   onTap: () {
                     setState(() { showN = false; showP = false; });
-                    if (widget.user.role == 'mayor') {
+                    // 4. UPDATED: Ensure Nagar Sevak globe icon routes to dashboard, not city info
+                    if (widget.user.role == 'mayor' || widget.user.role == 'nagar_sevak') {
                       widget.setTab('dashboard'); 
                     } else {
                       widget.setTab('cityinfo');
