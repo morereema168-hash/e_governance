@@ -1,22 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // <-- ADDED THIS FOR WEB SUPPORT
+import 'package:image_picker/image_picker.dart'; 
 import '../theme.dart';
 import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// UI inspired by the Nagar Panchayat Seva reference design:
-//   • Scenic illustrated background (gradient sky + city silhouette)
-//   • White rounded card centred on screen (mobile full-width, PC constrained)
-//   • Logo + bilingual app name at top of card
-//   • "Welcome / स्वागत आहे" heading with subtitle
-//   • +91 phone field with Indian flag, password field with eye toggle
-//   • Teal–green gradient LOG IN button
-//   • OR divider → "Log in with OTP" + "New User? Register Now" links
-//   • Footer: lock icon + "Secure & Official App" + language note
-//
-// On first launch → location permission dialog
-//
-// PC: card capped at 420 px, centred; Quick Access panel on right
+// UI inspired by the Nagar Panchayat Seva reference design
 // ─────────────────────────────────────────────────────────────────────────────
 
 class LoginScreen extends StatefulWidget {
@@ -27,10 +18,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
 
-  // ── UI mode ──
-  // 'home'     : main card (phone + password)
-  // 'otp'      : phone → OTP → done (existing user)
-  // 'register' : 6-step new-user flow
   String _mode = 'home';
   int    _step = 0;
 
@@ -43,17 +30,20 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   late Animation<double>   _fadeAnim;
   late Animation<double>   _shakeAnim;
 
-  // ── Home (direct login) ──
+  // ── SCANNING ANIMATION STATE ──
+  late AnimationController _scanCtrl;
+  late Animation<double>   _scanAnim;
+  bool _isScanning = false;
+  XFile? _capturedImage; // <-- CHANGED from File? to XFile? for Web compatibility
+
   final _phoneCtrl   = TextEditingController();
   final _passCtrl    = TextEditingController();
   bool  _showPass    = false;
   String? _quickRole;
 
-  // ── OTP login ──
   final _otpPhoneCtrl = TextEditingController();
   final _otpCodeCtrl  = TextEditingController();
 
-  // ── Registration ──
   final _firstNameCtrl   = TextEditingController();
   final _middleNameCtrl  = TextEditingController();
   final _lastNameCtrl    = TextEditingController();
@@ -75,7 +65,29 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   static const _demoOtp = '123456';
 
-  // ── Teal-green gradient (matches reference) ──
+  // ── THE WIZARD OF OZ DEMO DATA ──
+  int _demoCardIndex = 0;
+  final List<Map<String, String>> _fakeVoterCards = [
+    {
+      'epic': 'MH/14/123/111111',
+      'name': 'RAHUL SURESH DESAI',
+      'dob': '12/04/1990',
+      'address': 'Plot 45, Shivaji Nagar, Rampur - 431001'
+    },
+    {
+      'epic': 'MH/14/123/222222',
+      'name': 'PRIYA ANIL KADAM',
+      'dob': '08/11/1988',
+      'address': 'Flat 12, Green Park Heights, Rampur - 431002'
+    },
+    {
+      'epic': 'MH/14/123/333333',
+      'name': 'VIKRAM MANOJ MORE',
+      'dob': '23/07/1995',
+      'address': '8A, Main Market Road, Rampur - 431001'
+    },
+  ];
+
   static const _btnGradient = LinearGradient(
     colors: [Color(0xFF00BFA5), Color(0xFF1DE9B6)],
     begin: Alignment.centerLeft, end: Alignment.centerRight,
@@ -86,16 +98,22 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     _fadeCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _fadeAnim  = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
+    
     _shakeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 420));
     _shakeAnim = Tween<double>(begin: 0, end: 1)
         .animate(CurvedAnimation(parent: _shakeCtrl, curve: Curves.elasticIn));
 
-    // Show location dialog after first frame
+    // The Laser Scan Animation (sweeps back and forth)
+    _scanCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200));
+    _scanAnim = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _scanCtrl, curve: Curves.easeInOutSine));
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _showLocationDialog());
   }
 
   @override void dispose() {
-    _fadeCtrl.dispose(); _shakeCtrl.dispose();
+    _fadeCtrl.dispose(); 
+    _shakeCtrl.dispose();
+    _scanCtrl.dispose();
     for (final c in [_phoneCtrl, _passCtrl, _otpPhoneCtrl, _otpCodeCtrl,
                      _firstNameCtrl, _middleNameCtrl, _lastNameCtrl,
                      _regPhoneCtrl, _regOtpCtrl, _epicCtrl, _ocrNameCtrl,
@@ -109,7 +127,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     setState(() { _err = e; _loading = false; });
   }
 
-  // ── Location permission dialog ──
   void _showLocationDialog() {
     if (_locationAsked) return;
     _locationAsked = true;
@@ -187,7 +204,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ── Actions ──
   Future<void> _loginWithPassword() async {
     if (_phoneCtrl.text.trim().length < 10) { _setErr('Please enter a valid 10-digit mobile number.'); return; }
     if (_passCtrl.text.isEmpty) { _setErr('Account password is required.'); return; }
@@ -208,7 +224,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     });
   }
 
-  // OTP login flow
   Future<void> _sendOtp() async {
     if (_otpPhoneCtrl.text.trim().length < 10) { _setErr('Please enter a valid 10-digit mobile number.'); return; }
     setState(() { _loading = true; _err = ''; });
@@ -223,7 +238,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     widget.onLogin(USERS['amit@gmail.com']!);
   }
 
-  // Registration flow
   Future<void> _sendRegOtp() async {
     if (_lastNameCtrl.text.trim().isEmpty) { _setErr('Surname is required.'); return; }
     if (_firstNameCtrl.text.trim().isEmpty) { _setErr('First name is required.'); return; }
@@ -240,17 +254,48 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     setState(() { _loading = false; _step = 2; });
   }
 
+  // ── THE REAL CAMERA & SCANNING MAGIC ──
+  Future<void> _takePictureAndScan() async {
+    final ImagePicker picker = ImagePicker();
+    // Open the native camera
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+    
+    if (photo != null) {
+      setState(() {
+        _capturedImage = photo; // <-- Use the XFile directly
+        _isScanning = true;
+      });
+
+      // Start the laser sweeping animation back and forth
+      _scanCtrl.repeat(reverse: true);
+
+      // Let it scan for 3 seconds so the judges can watch it
+      await Future.delayed(const Duration(seconds: 3));
+
+      _scanCtrl.stop();
+      setState(() {
+        _isScanning = false;
+        _idUploaded = true;
+      });
+    }
+  }
+
   Future<void> _simulateOcr() async {
     setState(() { _loading = true; _err = ''; });
-    await Future.delayed(const Duration(milliseconds: 1500));
-    final fullNameOcr = [_lastNameCtrl.text.trim(), _firstNameCtrl.text.trim(),
-                          _middleNameCtrl.text.trim()]
-        .where((w) => w.isNotEmpty).join(' ');
-    _epicCtrl.text       = 'MH/14/123/456789';
-    _ocrNameCtrl.text    = fullNameOcr.toUpperCase();
-    _ocrDobCtrl.text     = '15/08/1992';
-    _ocrAddressCtrl.text = 'Plot 12, Gandhi Nagar, Rampur - 431001';
-    setState(() { _loading = false; _idUploaded = true; _step = 3; });
+    await Future.delayed(const Duration(milliseconds: 1000));
+    
+    // Pull the next fake card profile
+    final fakeProfile = _fakeVoterCards[_demoCardIndex];
+    
+    _epicCtrl.text       = fakeProfile['epic']!;
+    _ocrNameCtrl.text    = fakeProfile['name']!;
+    _ocrDobCtrl.text     = fakeProfile['dob']!;
+    _ocrAddressCtrl.text = fakeProfile['address']!;
+
+    // Move to the next card index for the next time you demo it
+    _demoCardIndex = (_demoCardIndex + 1) % _fakeVoterCards.length;
+
+    setState(() { _loading = false; _step = 3; });
   }
 
   void _confirmOcr() {
@@ -269,21 +314,29 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     if (_newPassCtrl.text != _confPassCtrl.text) { _setErr('The passwords entered do not match.'); return; }
     setState(() { _loading = true; _err = ''; });
     await Future.delayed(const Duration(milliseconds: 1000));
-    final fullName = '${_firstNameCtrl.text.trim()} ${_middleNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}'
-        .replaceAll(RegExp(r'\s+'), ' ').trim();
-    final initials = [_firstNameCtrl.text.trim(), _lastNameCtrl.text.trim()]
-        .where((w) => w.isNotEmpty).map((w) => w[0]).take(2).join().toUpperCase();
+    
+    final nameToUse = _ocrNameCtrl.text.isNotEmpty 
+        ? _ocrNameCtrl.text 
+        : '${_firstNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}';
+
+    final nameParts = nameToUse.split(' ').where((w) => w.isNotEmpty).toList();
+    final initials = nameParts.length >= 2 
+        ? '${nameParts[0][0]}${nameParts.last[0]}'.toUpperCase()
+        : (nameParts.isNotEmpty ? nameParts[0][0].toUpperCase() : 'U');
+
     widget.onLogin(AppUser(
-      email: _regPhoneCtrl.text.trim(), name: fullName,
-      role: 'citizen', avatar: initials, ward: _ward));
+      email: _regPhoneCtrl.text.trim(), 
+      name: nameToUse,
+      role: 'citizen', 
+      avatar: initials, 
+      ward: _ward
+    ));
   }
 
-  // ════════════════════════════════════════════════════════════════
   @override Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 700;
     return Scaffold(
       body: Stack(children: [
-        // ── Scenic background ──
         _scenicBackground(),
         SafeArea(
           child: FadeTransition(
@@ -295,7 +348,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ── Illustrated scenic background ──
   Widget _scenicBackground() {
     return Container(
       width: double.infinity, height: double.infinity,
@@ -307,7 +359,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
       ),
       child: Stack(children: [
-        // Sun glow
         Positioned(top: -60, right: -40,
           child: Container(width: 240, height: 240,
             decoration: BoxDecoration(
@@ -316,7 +367,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 const Color(0xFFFFCC02).withOpacity(0.55),
                 Colors.transparent])),
           )),
-        // City silhouette bottom
         Positioned(bottom: 0, left: 0, right: 0,
           child: SizedBox(
             height: 140,
@@ -326,12 +376,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ══════════════════════════════════════════════════════
-  // PC — branding left | card center | quick access right
-  // ══════════════════════════════════════════════════════
   Widget _wideLayout() {
     return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      // LEFT branding
       Expanded(flex: 3,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 56),
@@ -370,13 +416,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               ])),
           ]),
         )),
-      // CENTER card
       Expanded(flex: 4,
         child: Center(child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(vertical: 32),
           child: _buildCard(maxWidth: 440),
         ))),
-      // RIGHT quick access
       Expanded(flex: 3,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 56),
@@ -423,9 +467,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     ]);
   }
 
-  // ══════════════════════════════════════════════════════
-  // MOBILE layout
-  // ══════════════════════════════════════════════════════
   Widget _narrowLayout() {
     return SingleChildScrollView(
       child: Column(children: [
@@ -478,9 +519,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ══════════════════════════════════════════════════════
-  // SHARED CARD BUILDER
-  // ══════════════════════════════════════════════════════
   Widget _buildCard({required double maxWidth, double mobilePadding = 0}) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: mobilePadding),
@@ -500,14 +538,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               child: SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
                 child: Column(children: [
-                  // ── Card header band ──
                   _cardHeader(),
-                  // ── Card body ──
                   Padding(
                     padding: const EdgeInsets.fromLTRB(28, 24, 28, 8),
                     child: _shakeWrapper(_cardContent()),
                   ),
-                  // ── Footer ──
                   _cardFooter(),
                 ]),
               ),
@@ -519,7 +554,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 
   Widget _cardHeader() {
-    // Only show the logo + title on home mode step 0
     if (_mode == 'register' || (_mode == 'otp' && _step > 0)) {
       return const SizedBox.shrink();
     }
@@ -577,15 +611,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     return _homeLoginForm();
   }
 
-  // ══════════════════════════════════════════════════════
-  // HOME LOGIN FORM  (matches reference image exactly)
-  // ══════════════════════════════════════════════════════
   Widget _homeLoginForm() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Phone field with Indian flag
       _phoneField(_phoneCtrl, onSubmitted: null),
       const SizedBox(height: 14),
-      // Password field
       TextField(
         controller: _passCtrl, obscureText: !_showPass,
         decoration: InputDecoration(
@@ -607,7 +636,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         style: const TextStyle(fontFamily: 'Nunito', fontSize: 14),
         onSubmitted: (_) => _loginWithPassword()),
       const SizedBox(height: 8),
-      // Forgot password
       Align(alignment: Alignment.centerRight,
         child: TextButton(
           onPressed: () {},
@@ -615,15 +643,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           child: const Text('Forgot Password?',
             style: TextStyle(color: Color(0xFF00897B), fontSize: 12,
                 fontWeight: FontWeight.w700, fontFamily: 'Nunito')))),
-      // Error
       _errBox(),
       const SizedBox(height: 16),
-      // LOG IN button — teal gradient
       _gradientButton(
         label: _loading ? 'Authenticating…' : 'LOG IN  →',
         onTap: _loading ? null : _loginWithPassword),
       const SizedBox(height: 20),
-      // OR divider
       Row(children: const [
         Expanded(child: Divider(color: Color(0xFFDDDDDD))),
         Padding(padding: EdgeInsets.symmetric(horizontal: 12),
@@ -632,7 +657,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         Expanded(child: Divider(color: Color(0xFFDDDDDD))),
       ]),
       const SizedBox(height: 16),
-      // Log in with OTP
       Center(child: GestureDetector(
         onTap: () => setState(() { _mode = 'otp'; _step = 0; _err = ''; }),
         child: RichText(text: const TextSpan(
@@ -644,7 +668,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               style: TextStyle(color: Colors.black45, fontSize: 12)),
           ])))),
       const SizedBox(height: 14),
-      // Register
       Center(child: GestureDetector(
         onTap: () => setState(() { _mode = 'register'; _step = 0; _err = ''; }),
         child: RichText(text: const TextSpan(
@@ -659,7 +682,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     ]);
   }
 
-  // ── Reusable teal gradient button ──
   Widget _gradientButton({required String label, VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -687,7 +709,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ── Phone field with Indian flag prefix ──
   Widget _phoneField(TextEditingController ctrl, {void Function(String)? onSubmitted}) {
     return TextField(
       controller: ctrl,
@@ -721,9 +742,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  // ══════════════════════════════════════════════════════
-  // OTP LOGIN FLOW  (existing user)
-  // ══════════════════════════════════════════════════════
   Widget _otpLoginFlow() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _backLink(onTap: () => setState(() { _mode = 'home'; _step = 0; _err = ''; })),
@@ -772,9 +790,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     ]);
   }
 
-  // ══════════════════════════════════════════════════════
-  // REGISTRATION FLOW (6 steps)
-  // ══════════════════════════════════════════════════════
   static const _regTitles = [
     'Applicant Particulars', 'Mobile Verification',
     'Identity Document Upload', 'Document Data Verification',
@@ -812,8 +827,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     if (_step == 1) _gradientButton(
       label: _loading ? 'Verifying…' : 'Verify One-Time Password',
       onTap: _loading ? null : _verifyRegOtp),
-    if (_step == 2) _gradientButton(
-      label: _loading ? 'Processing Document…' : (_idUploaded ? 'Extract Data via OCR' : 'Upload Identity Document'),
+    if (_step == 2 && _idUploaded) _gradientButton(
+      label: _loading ? 'Processing Document…' : 'Extract Data via OCR',
       onTap: _loading ? null : _simulateOcr),
     if (_step == 3) _gradientButton(
       label: 'Confirm Details & Proceed',
@@ -865,9 +880,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   Widget _regStep2() => Column(children: [
     GestureDetector(
-      onTap: () => setState(() => _idUploaded = true),
+      onTap: () {
+        if (!_idUploaded && !_isScanning) {
+          _takePictureAndScan(); // Trigger the native camera!
+        }
+      },
       child: Container(
-        width: double.infinity, height: 165,
+        width: double.infinity, height: 180,
+        clipBehavior: Clip.hardEdge, // ensure the image doesn't bleed out of rounded corners
         decoration: BoxDecoration(
           color: _idUploaded ? const Color(0xFFE0F2F1) : const Color(0xFFF8F8F8),
           borderRadius: BorderRadius.circular(16),
@@ -876,36 +896,86 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 ? const Color(0xFF00897B).withOpacity(0.6)
                 : const Color(0xFF00BFA5).withOpacity(0.4),
             width: 2)),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _idUploaded
-                  ? const Color(0xFF00897B).withOpacity(0.12)
-                  : const Color(0xFF00BFA5).withOpacity(0.1),
-              shape: BoxShape.circle),
-            child: Icon(
-              _idUploaded ? Icons.check_circle_outline : Icons.credit_card,
-              size: 32,
-              color: _idUploaded ? const Color(0xFF00897B) : const Color(0xFF00BFA5))),
-          const SizedBox(height: 10),
-          Text(
-            _idUploaded ? 'Document Uploaded Successfully ✓' : 'Electoral Photo Identity Card — Front & Reverse',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, fontFamily: 'Nunito',
-              color: _idUploaded ? const Color(0xFF00897B) : const Color(0xFF0D1B3E))),
-          const SizedBox(height: 4),
-          Text(
-            _idUploaded ? 'Tap "Extract Data via OCR" below to proceed' : 'Tap to upload a clear photograph',
-            style: const TextStyle(fontSize: 11, color: Colors.black45, fontFamily: 'Nunito')),
-          if (!_idUploaded) ...[
-            const SizedBox(height: 12),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              _uploadChip(Icons.camera_alt_outlined, 'Camera'),
-              const SizedBox(width: 10),
-              _uploadChip(Icons.photo_library_outlined, 'Gallery'),
-            ]),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // If we took a picture, show it as the background
+            // ── ADDED WEB COMPATIBILITY HERE ──
+            if (_capturedImage != null)
+              Positioned.fill(
+                child: kIsWeb
+                  ? Image.network(_capturedImage!.path, fit: BoxFit.cover)
+                  : Image.file(File(_capturedImage!.path), fit: BoxFit.cover),
+              ),
+
+            // If we are currently scanning, show the sweeping laser
+            if (_isScanning)
+              AnimatedBuilder(
+                animation: _scanAnim,
+                builder: (context, child) {
+                  return Positioned(
+                    top: _scanAnim.value * 170, // Sweeps across height
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.greenAccent,
+                        boxShadow: [
+                          BoxShadow(color: Colors.greenAccent.withOpacity(0.8), blurRadius: 12, spreadRadius: 3),
+                          BoxShadow(color: Colors.white, blurRadius: 4),
+                        ]
+                      )
+                    )
+                  );
+                }
+              ),
+
+            // The UI text/icons overlay
+            if (!_isScanning) 
+              Container(
+                color: _capturedImage != null ? Colors.black54 : Colors.transparent, // Darken image behind text
+                width: double.infinity,
+                height: double.infinity,
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: _idUploaded
+                          ? const Color(0xFF00897B).withOpacity(_capturedImage != null ? 0.9 : 0.12)
+                          : const Color(0xFF00BFA5).withOpacity(0.1),
+                      shape: BoxShape.circle),
+                    child: Icon(
+                      _idUploaded ? Icons.check_circle_outline : Icons.credit_card,
+                      size: 32,
+                      color: _idUploaded 
+                        ? (_capturedImage != null ? Colors.white : const Color(0xFF00897B)) 
+                        : const Color(0xFF00BFA5))),
+                  const SizedBox(height: 10),
+                  Text(
+                    _idUploaded ? 'Document Scanned Successfully ✓' : 'Electoral Photo Identity Card',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, fontFamily: 'Nunito',
+                      color: _idUploaded 
+                        ? (_capturedImage != null ? Colors.white : const Color(0xFF00897B)) 
+                        : const Color(0xFF0D1B3E))),
+                  const SizedBox(height: 4),
+                  Text(
+                    _idUploaded ? 'Tap "Extract Data via OCR" below to proceed' : 'Tap to scan physical card',
+                    style: TextStyle(fontSize: 11, fontFamily: 'Nunito',
+                      color: _capturedImage != null ? Colors.white70 : Colors.black45)),
+                  
+                  if (!_idUploaded) ...[
+                    const SizedBox(height: 12),
+                    Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      _uploadChip(Icons.camera_alt_outlined, 'Camera'),
+                      const SizedBox(width: 10),
+                      _uploadChip(Icons.photo_library_outlined, 'Gallery'),
+                    ]),
+                  ],
+                ]),
+              ),
           ],
-        ]),
+        ),
       ),
     ),
     const SizedBox(height: 14),
@@ -933,7 +1003,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         SizedBox(width: 16, height: 16,
           child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF00BFA5))),
         SizedBox(width: 10),
-        Text('Processing identity document…',
+        Text('Running Optical Character Recognition…',
           style: TextStyle(fontSize: 12, color: Colors.black45, fontFamily: 'Nunito')),
       ])),
   ]);
@@ -1047,10 +1117,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 
   Widget _regStep5() {
-    final initials = [_firstNameCtrl.text.trim(), _lastNameCtrl.text.trim()]
-        .where((w) => w.isNotEmpty).map((w) => w[0]).take(2).join().toUpperCase();
-    final fullName = '${_firstNameCtrl.text.trim()} ${_middleNameCtrl.text.trim()} ${_lastNameCtrl.text.trim()}'
-        .replaceAll(RegExp(r'\s+'), ' ').trim();
+    final nameParts = _ocrNameCtrl.text.split(' ').where((w) => w.isNotEmpty).toList();
+    final initials = nameParts.length >= 2 
+        ? '${nameParts[0][0]}${nameParts.last[0]}'.toUpperCase()
+        : (nameParts.isNotEmpty ? nameParts[0][0].toUpperCase() : 'U');
+    final fullName = _ocrNameCtrl.text;
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
         padding: const EdgeInsets.all(16), margin: const EdgeInsets.only(bottom: 20),
@@ -1124,10 +1196,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         style: const TextStyle(fontFamily: 'Nunito', fontSize: 14)),
     ]);
   }
-
-  // ══════════════════════════════════════════════════════
-  // SHARED HELPERS
-  // ══════════════════════════════════════════════════════
 
   Widget _logoWidget({double size = 80}) => Container(
     width: size, height: size,
@@ -1314,9 +1382,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// City silhouette painter for background
-// ──────────────────────────────────────────────────────────────────────────────
 class _CitySilhouettePainter extends CustomPainter {
   @override void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = const Color(0xFFB2DFDB).withOpacity(0.55);
@@ -1325,11 +1390,10 @@ class _CitySilhouettePainter extends CustomPainter {
     final h = size.height;
 
     path.moveTo(0, h);
-    // Left village buildings
     path.lineTo(0, h * 0.55);
     path.lineTo(w * 0.04, h * 0.55);
     path.lineTo(w * 0.04, h * 0.35);
-    path.lineTo(w * 0.06, h * 0.25); // triangle roof
+    path.lineTo(w * 0.06, h * 0.25);
     path.lineTo(w * 0.08, h * 0.35);
     path.lineTo(w * 0.10, h * 0.35);
     path.lineTo(w * 0.10, h * 0.45);
@@ -1337,12 +1401,10 @@ class _CitySilhouettePainter extends CustomPainter {
     path.lineTo(w * 0.15, h * 0.30);
     path.lineTo(w * 0.20, h * 0.30);
     path.lineTo(w * 0.20, h * 0.50);
-    // Mid low buildings
     path.lineTo(w * 0.28, h * 0.50);
     path.lineTo(w * 0.28, h * 0.40);
     path.lineTo(w * 0.35, h * 0.40);
     path.lineTo(w * 0.35, h * 0.55);
-    // Right tall city buildings
     path.lineTo(w * 0.55, h * 0.55);
     path.lineTo(w * 0.55, h * 0.20);
     path.lineTo(w * 0.62, h * 0.20);
@@ -1364,7 +1426,6 @@ class _CitySilhouettePainter extends CustomPainter {
     path.close();
     canvas.drawPath(path, paint);
 
-    // Ground strip
     final groundPaint = Paint()..color = const Color(0xFFA5D6A7).withOpacity(0.6);
     canvas.drawRect(Rect.fromLTWH(0, h * 0.88, w, h * 0.12), groundPaint);
   }

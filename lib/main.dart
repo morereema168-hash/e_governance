@@ -2,20 +2,19 @@ import 'package:e_governance/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart'; // ADDED: Provider import
 import 'theme.dart';
 import 'models/models.dart';
 import 'screens/login_screen.dart';
 import 'screens/vote_screen.dart';
 import 'screens/report_screen.dart';
-import 'screens/dashboard_screen.dart';
 import 'screens/community_screen.dart';
-import 'screens/fundraise_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/cityinfo_screen.dart';
 import 'screens/mayor_dashboard_screen.dart';
-// 1. ADDED: Import your new Nagar Sevak dashboard
 import 'screens/nagar_sevak_dashboard.dart'; 
 import 'widgets/shared_widgets.dart';
+import 'services/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +25,16 @@ void main() async {
   );
   
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  runApp(const NagarPanchayatApp());
+  
+  // FIXED: Wrapped the entire app in the MultiProvider so all screens can access SettingsProvider
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+      ],
+      child: const NagarPanchayatApp(),
+    ),
+  );
 }
 
 class NagarPanchayatApp extends StatelessWidget {
@@ -115,10 +123,8 @@ class _RootState extends State<_Root> {
         return CommunityScreen(user: user!);
       case 'report':
         return ReportScreen(user: user!);
-      case 'dashboard':
-        return const DashboardScreen();
-      case 'fundraise':
-        return const FundraiseScreen();
+     
+    
       case 'profile':
         return ProfileScreen(user: user!, onLogout: _logout);
       default:
@@ -614,7 +620,7 @@ class _BottomNav extends StatelessWidget {
             offset: const Offset(0, -4),
           ),
         ],
-        border: Border(top: BorderSide(color: AppColors.border)),
+        border: const Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -688,20 +694,7 @@ class _BottomNav extends StatelessWidget {
               ),
             ),
           ),
-          _NavBtn(
-            id: 'dashboard',
-            icon: Icons.dashboard_outlined,
-            label: 'Dashboard',
-            active: active == 'dashboard',
-            onTap: setTab,
-          ),
-          _NavBtn(
-            id: 'fundraise',
-            icon: Icons.volunteer_activism_outlined,
-            label: 'Fundraise',
-            active: active == 'fundraise',
-            onTap: setTab,
-          ),
+          
         ],
       ),
     );

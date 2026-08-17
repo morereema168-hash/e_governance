@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import '../theme.dart';
 import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ENHANCED ReportScreen
-// Features:
-//   • Severity picker (Low / Medium / High / Critical)
-//   • Photo / evidence upload placeholder
-//   • Preferred contact method (Call / WhatsApp / Email / No preference)
-//   • Best time to inspect (Morning / Afternoon / Evening / Anytime)
-//   • Stepped multi-page form (Step 1 → Step 2 → Step 3 → Review)
-//   • Filter bar (All / Pending / In Progress / Resolved)
-//   • Search reports
-//   • Expandable report detail card
-//   • Delete / withdraw a report (with undo snackbar)
-//   • Upvote similar issues
-//   • Summary analytics panel (wide layout)
-//   • LIVE NEWS TICKER for top trending issues
-// ─────────────────────────────────────────────────────────────────────────────
+const Color primaryAccent = Color(0xFF2563EB);
+
+// Local Mock Report Model
+class MockReport {
+  final String id;
+  final String category;
+  final String desc;
+  String status; // Made mutable so the user can mark it
+  final String time;
+  final String ticket;
+  final String ward;
+
+  MockReport({
+    required this.id, required this.category, required this.desc,
+    required this.status, required this.time, required this.ticket,
+    required this.ward,
+  });
+}
 
 class ReportScreen extends StatefulWidget {
   final AppUser user;
@@ -30,15 +31,13 @@ class ReportScreen extends StatefulWidget {
 
 class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMixin {
   // ── DATA ──────────────────────────────────────────────────────────────────
-  final List<Report> myReports = [
-    Report(id: '1', dept: 'Water',      title: 'No water for 3 days',    desc: 'Ward 3 dry since Monday.',      status: 'Pending',     time: '1d ago', ticket: '#8831', ward: 'Ward 3'),
-    Report(id: '2', dept: 'Roads',      title: 'Pothole near bus stop',  desc: 'Dangerous pothole on MG Road.', status: 'In Progress', time: '2d ago', ticket: '#8832', ward: 'Ward 3'),
-    Report(id: '3', dept: 'Sanitation', title: 'Open drain near school', desc: 'Children at risk.',             status: 'Resolved',    time: '3d ago', ticket: '#8829', ward: 'Ward 3'),
+  final List<MockReport> myReports = [
+    MockReport(id: '1', category: 'Water Leak',  desc: 'Ward 3 dry since Monday. No water for 3 days.',      status: 'Unresolved',  time: '1d ago', ticket: '#8831', ward: 'Ward 3'),
+    MockReport(id: '2', category: 'Pothole',     desc: 'Dangerous pothole on MG Road near the bus stop.',    status: 'In Progress', time: '2d ago', ticket: '#8832', ward: 'Ward 3'),
+    MockReport(id: '3', category: 'Drainage',    desc: 'Open drain near school. Children at risk.',          status: 'Resolved',    time: '3d ago', ticket: '#8829', ward: 'Ward 3'),
   ];
 
-  final Map<String, int>  _upvotes  = {'1': 4, '2': 11, '3': 2};
-  final Map<String, bool> _upvoted  = {};
-  final Set<String>       _expanded = {};
+  final Set<String> _expanded = {};
 
   // ── UI STATE ──────────────────────────────────────────────────────────────
   bool   showForm      = false;
@@ -51,65 +50,48 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   // ── FORM STATE (multi-step) ───────────────────────────────────────────────
   int    _step        = 0;
   String selCat       = 'Pothole';
-  String selDept      = 'Roads';
-  String selSeverity  = 'Medium';
-  String selContact   = 'WhatsApp';
-  String selTime      = 'Anytime';
   bool   hasPhoto     = false;
-  final _titleCtrl = TextEditingController();
   final _descCtrl  = TextEditingController();
 
   // ── CONSTANTS ─────────────────────────────────────────────────────────────
-  final deptColors = const {
-    'Water':       AppColors.teal,
-    'Sanitation':  AppColors.green,
-    'Electricity': AppColors.gold,
-    'Roads':       AppColors.greyDark,
-    'Other':       AppColors.purple,
+  final cats = ['Streetlight', 'Water Leak', 'Pothole', 'Garbage', 'Drainage', 'Other'];
+  final filters = ['All', 'Unresolved', 'In Progress', 'Resolved'];
+
+  final catColors = const {
+    'Streetlight': Colors.amber,
+    'Water Leak':  Colors.teal,
+    'Pothole':     Colors.orange,
+    'Garbage':     Colors.green,
+    'Drainage':    Colors.blue,
+    'Other':       Colors.deepPurple,
   };
-
-  final cats    = ['Streetlight', 'Water Leak', 'Pothole', 'Garbage', 'Drainage', 'Other'];
-  final depts   = ['Water', 'Sanitation', 'Electricity', 'Roads', 'Other'];
-  final filters = ['All', 'Pending', 'In Progress', 'Resolved'];
-
-  static const severityMeta = {
-    'Low':      {'color': Color(0xFF22C55E), 'icon': Icons.arrow_downward_rounded, 'desc': 'Minor inconvenience'},
-    'Medium':   {'color': Color(0xFFF59E0B), 'icon': Icons.remove_rounded,          'desc': 'Noticeable problem'},
-    'High':     {'color': Color(0xFFEF4444), 'icon': Icons.arrow_upward_rounded,    'desc': 'Urgent action needed'},
-    'Critical': {'color': Color(0xFF7C3AED), 'icon': Icons.priority_high_rounded,   'desc': 'Immediate danger'},
-  };
-
-  static const contactOpts = ['Call', 'WhatsApp', 'Email', 'No preference'];
-  static const timeOpts    = ['Morning', 'Afternoon', 'Evening', 'Anytime'];
 
   // ── HELPERS ───────────────────────────────────────────────────────────────
-  List<Report> get filteredReports {
+  List<MockReport> get filteredReports {
     return myReports.where((r) {
       final matchStatus = filterStatus == 'All' || r.status == filterStatus;
       final matchSearch = searchQuery.isEmpty ||
-          r.title.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          r.dept.toLowerCase().contains(searchQuery.toLowerCase());
+          r.category.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          r.desc.toLowerCase().contains(searchQuery.toLowerCase());
       return matchStatus && matchSearch;
     }).toList();
   }
 
   void _submitReport() async {
-    if (_titleCtrl.text.isEmpty) return;
+    if (_descCtrl.text.isEmpty) return;
     setState(() => submitting = true);
     await Future.delayed(const Duration(milliseconds: 900));
     final newId = '${DateTime.now().millisecondsSinceEpoch}';
     setState(() {
-      myReports.insert(0, Report(
-        id:     newId,
-        dept:   selDept,
-        title:  _titleCtrl.text,
-        desc:   _descCtrl.text,
-        status: 'Pending',
-        time:   'Just now',
-        ticket: '#${8860 + myReports.length}',
-        ward:   widget.user.ward,
+      myReports.insert(0, MockReport(
+        id:       newId,
+        category: selCat,
+        desc:     _descCtrl.text,
+        status:   'Unresolved',
+        time:     'Just now',
+        ticket:   '#${8860 + myReports.length}',
+        ward:     'Ward ${widget.user.ward}',
       ));
-      _upvotes[newId] = 0;
       submitting = false;
       submitted  = true;
     });
@@ -118,23 +100,17 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       submitted = false;
       showForm  = false;
       _step     = 0;
-      _titleCtrl.clear();
       _descCtrl.clear();
-      selCat      = 'Pothole';
-      selDept     = 'Roads';
-      selSeverity = 'Medium';
-      selContact  = 'WhatsApp';
-      selTime     = 'Anytime';
-      hasPhoto    = false;
+      selCat    = 'Pothole';
+      hasPhoto  = false;
     });
   }
 
-  void _deleteReport(Report r) {
+  void _deleteReport(MockReport r) {
     setState(() => myReports.remove(r));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Report "${r.title}" withdrawn.',
-            style: const TextStyle(fontFamily: 'Nunito')),
+        content: const Text('Report withdrawn.', style: TextStyle(fontFamily: 'Nunito')),
         action: SnackBarAction(
           label: 'UNDO',
           onPressed: () {
@@ -151,22 +127,9 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     );
   }
 
-  void _toggleUpvote(String id) {
-    setState(() {
-      if (_upvoted[id] == true) {
-        _upvoted[id] = false;
-        _upvotes[id] = (_upvotes[id] ?? 1) - 1;
-      } else {
-        _upvoted[id] = true;
-        _upvotes[id] = (_upvotes[id] ?? 0) + 1;
-      }
-    });
-  }
-
   @override
   void dispose() {
     _searchCtrl.dispose();
-    _titleCtrl.dispose();
     _descCtrl.dispose();
     super.dispose();
   }
@@ -175,30 +138,52 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 700;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 80),
       child: Column(children: [
         // HEADER
-        PageHeader(
-          tag:   'OFFICIAL REPORTS',
-          title: 'Report an Issue',
-          sub:   'Sent → Department · Ward Rep · Mayor',
-          bottom: Row(children: [
-            AppBtn(
-              label: '+ New Report', small: true,
-              onTap: () => setState(() { showForm = true; _step = 0; }),
-            ),
-            const SizedBox(width: 8),
-            AppBtn(
-              label: 'My Reports (${myReports.length})',
-              small: true, outline: true, color: Colors.white,
-              onTap: () => setState(() => showForm = false),
-            ),
-          ]),
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('MY REPORTS', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w800, letterSpacing: 1)),
+              const SizedBox(height: 4),
+              Text('Report Tracker', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+              const SizedBox(height: 4),
+              const Text('Track, update, and manage your personal civic reports.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+              Row(children: [
+                ElevatedButton.icon(
+                  onPressed: () => setState(() { showForm = true; _step = 0; }),
+                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                  label: const Text('New Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryAccent,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => setState(() => showForm = false),
+                  style: TextButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.grey.withOpacity(0.3)))
+                  ),
+                  child: Text('My Reports (${myReports.length})', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+                ),
+              ]),
+            ],
+          )
         ),
 
-        // ── LIVE NEWS TICKER ──
         const _TrendingTicker(),
 
         Padding(
@@ -250,136 +235,103 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   Widget _statsPanel({Key? key}) {
     final total      = myReports.length;
     final resolved   = myReports.where((r) => r.status == 'Resolved').length;
-    final pending    = myReports.where((r) => r.status == 'Pending').length;
+    final pending    = myReports.where((r) => r.status == 'Unresolved').length;
     final inProgress = myReports.where((r) => r.status == 'In Progress').length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Overview',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, fontFamily: 'Nunito')),
+      const Text('Overview', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
       const SizedBox(height: 14),
       GridView.count(
         crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 2.2,
         children: [
-          _statCard('Total',       total.toString(),      AppColors.orange, Icons.assignment_outlined),
-          _statCard('Resolved',    resolved.toString(),   AppColors.green,  Icons.check_circle_outline),
-          _statCard('In Progress', inProgress.toString(), AppColors.blue,   Icons.autorenew),
-          _statCard('Pending',     pending.toString(),    AppColors.gold,   Icons.hourglass_empty),
+          _statCard('Total',       total.toString(),      Colors.orange, Icons.assignment_outlined),
+          _statCard('Resolved',    resolved.toString(),   Colors.green,  Icons.check_circle_outline),
+          _statCard('In Progress', inProgress.toString(), Colors.blue,   Icons.autorenew),
+          _statCard('Unresolved',  pending.toString(),    Colors.amber,  Icons.hourglass_empty),
         ],
       ),
       const SizedBox(height: 16),
-      AppCard(
-        bgColor: AppColors.orangeLight,
-        borderColor: AppColors.orange.withOpacity(0.3),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [AppColors.orange, AppColors.orangeDark]),
-                borderRadius: BorderRadius.circular(12),
+      Card(
+        color: isDark ? primaryAccent.withOpacity(0.2) : primaryAccent.withOpacity(0.05),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: primaryAccent.withOpacity(0.3))),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: primaryAccent, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 22),
               ),
-              child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 22),
+              const SizedBox(width: 12),
+              const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('File a New Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                Text('Takes less than 1 minute', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              ])),
+            ]),
+            const SizedBox(height: 14),
+            ElevatedButton(
+              onPressed: () => setState(() { showForm = true; _step = 0; }),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryAccent,
+                minimumSize: const Size(double.infinity, 44),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+              ),
+              child: const Text('Start Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
-            const SizedBox(width: 12),
-            const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('File a New Report',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
-              Text('Takes less than 2 minutes',
-                  style: TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
-            ])),
           ]),
-          const SizedBox(height: 14),
-          AppBtn(
-            label: '+ New Report', full: true,
-            onTap: () => setState(() { showForm = true; _step = 0; }),
-          ),
-        ]),
-      ),
-      const SizedBox(height: 10),
-      AppCard(
-        bgColor: AppColors.blueLight,
-        borderColor: AppColors.blue.withOpacity(0.2),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('How it works',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14,
-                  color: AppColors.blue, fontFamily: 'Nunito')),
-          const SizedBox(height: 10),
-          for (final step in [
-            ['1', 'Choose category, department & severity'],
-            ['2', 'Add title, details and optional photo'],
-            ['3', 'Set contact preference & inspection time'],
-            ['4', 'Review and submit – goes to dept, ward rep & mayor'],
-          ])
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(children: [
-                Container(
-                  width: 22, height: 22,
-                  decoration: const BoxDecoration(
-                      shape: BoxShape.circle, color: AppColors.blue),
-                  child: Center(child: Text(step[0],
-                      style: const TextStyle(color: Colors.white, fontSize: 11,
-                          fontWeight: FontWeight.w900))),
-                ),
-                const SizedBox(width: 8),
-                Expanded(child: Text(step[1],
-                    style: const TextStyle(fontSize: 12, fontFamily: 'Nunito',
-                        color: AppColors.dark))),
-              ]),
-            ),
-        ]),
+        ),
       ),
     ]);
   }
 
-  Widget _statCard(String label, String value, Color color, IconData icon) =>
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border(top: BorderSide(color: color, width: 3)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 12)],
-        ),
-        child: Row(children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(value,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900,
-                    color: color, fontFamily: 'Nunito')),
-            Text(label,
-                style: const TextStyle(fontSize: 11, color: AppColors.grey,
-                    fontFamily: 'Nunito')),
-          ]),
+  Widget _statCard(String label, String value, Color color, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border(top: BorderSide(color: color, width: 3)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)],
+      ),
+      child: Row(children: [
+        Icon(icon, color: color, size: 22),
+        const SizedBox(width: 10),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
+          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         ]),
-      );
+      ]),
+    );
+  }
 
-  // ── MULTI-STEP FORM ────────────────────────────────────────────────────────
+  // ── 3-STEP FORM ────────────────────────────────────────────────────────────
   Widget _formPanel({Key? key}) {
     if (submitted) {
-      return AppCard(
+      return Card(
         key: key,
-        child: Column(children: [
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.elasticOut,
-            builder: (_, v, child) => Transform.scale(scale: v, child: child),
-            child: const Text('✅', style: TextStyle(fontSize: 64)),
-          ),
-          const SizedBox(height: 12),
-          const Text('Report Submitted!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900,
-                  color: AppColors.green, fontFamily: 'Nunito')),
-          const SizedBox(height: 4),
-          Text('Sent to $selDept Dept · ${widget.user.ward} Rep · Mayor',
-              style: const TextStyle(fontSize: 13, color: AppColors.grey,
-                  fontFamily: 'Nunito')),
-          const SizedBox(height: 8),
-        ]),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.green.withOpacity(0.5))),
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.elasticOut,
+              builder: (_, v, child) => Transform.scale(scale: v, child: child),
+              child: const Icon(Icons.check_circle, color: Colors.green, size: 64),
+            ),
+            const SizedBox(height: 16),
+            const Text('Report Submitted!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green)),
+            const SizedBox(height: 4),
+            Text('Sent to Ward ${widget.user.ward} Rep', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+          ]),
+        ),
       );
     }
 
@@ -397,8 +349,8 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   }
 
   Widget _stepIndicator() {
-    const labels = ['Category', 'Details', 'Preferences', 'Review'];
-    return Row(children: List.generate(4, (i) {
+    const labels = ['Category', 'Details', 'Review'];
+    return Row(children: List.generate(3, (i) {
       final done    = i < _step;
       final current = i == _step;
       return Expanded(child: Row(children: [
@@ -407,17 +359,17 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             duration: const Duration(milliseconds: 300),
             height: 4,
             decoration: BoxDecoration(
-              color: done || current ? AppColors.orange : AppColors.border,
+              color: done || current ? primaryAccent : Colors.grey.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 4),
           Text(labels[i], style: TextStyle(
-            fontSize: 10, fontFamily: 'Nunito', fontWeight: FontWeight.w700,
-            color: current ? AppColors.orange : done ? AppColors.green : AppColors.grey,
+            fontSize: 10, fontWeight: FontWeight.w700,
+            color: current ? primaryAccent : done ? Colors.green : Colors.grey,
           )),
         ])),
-        if (i < 3) const SizedBox(width: 4),
+        if (i < 2) const SizedBox(width: 4),
       ]));
     }));
   }
@@ -426,381 +378,185 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     switch (_step) {
       case 0:  return _step0(key: const ValueKey(0));
       case 1:  return _step1(key: const ValueKey(1));
-      case 2:  return _step2(key: const ValueKey(2));
-      default: return _step3(key: const ValueKey(3));
+      default: return _step2(key: const ValueKey(2)); // Now Step 2 is Review
     }
   }
 
   Widget _stepNavRow() => Row(children: [
     if (_step > 0)
-      Expanded(child: AppBtn(
-        label: '← Back', outline: true,
-        onTap: () => setState(() => _step--),
+      Expanded(child: TextButton(
+        onPressed: () => setState(() => _step--),
+        style: TextButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: Colors.grey.withOpacity(0.3)))),
+        child: const Text('← Back', style: TextStyle(color: Colors.grey)),
       )),
     if (_step > 0) const SizedBox(width: 10),
-    Expanded(child: _step < 3
-        ? AppBtn(
-            label: 'Continue →',
-            onTap: () {
-              if (_step == 1 && _titleCtrl.text.isEmpty) return;
+    Expanded(child: _step < 2
+        ? ElevatedButton(
+            onPressed: () {
+              if (_step == 1 && _descCtrl.text.isEmpty) return; // Validation requires description now
               setState(() => _step++);
             },
+            style: ElevatedButton.styleFrom(backgroundColor: primaryAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            child: const Text('Continue →', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           )
-        : AppBtn(
-            label: submitting ? 'Submitting…' : 'Submit Report ',
-            disabled: submitting,
-            onTap: _submitReport,
+        : ElevatedButton(
+            onPressed: submitting ? null : _submitReport,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            child: Text(submitting ? 'Submitting…' : 'Submit Report', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           )),
   ]);
 
-  // ── STEP 0: Category & Department ─────────────────────────────────────────
-  Widget _step0({Key? key}) => AppCard(
-    key: key,
-    borderColor: AppColors.orange.withOpacity(0.4),
-    borderWidth: 2,
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionLabel('ISSUE CATEGORY'),
-      const SizedBox(height: 10),
-      GridView.count(
-        crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.1,
-        children: cats.map((c) {
-          final sel = selCat == c;
-          return GestureDetector(
-            onTap: () => setState(() => selCat = c),
-            child: AnimatedScale(
-              scale: sel ? 1.05 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutBack,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: sel ? AppColors.orangeLight : AppColors.bg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: sel ? AppColors.orange : AppColors.border,
-                      width: sel ? 2 : 1),
-                  boxShadow: sel
-                      ? [BoxShadow(
-                          color: AppColors.orange.withOpacity(0.2),
-                          blurRadius: 8, offset: const Offset(0, 4))]
-                      : [],
+  // ── STEP 0: Category ──────────────────────────────────────────────────────
+  Widget _step0({Key? key}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    return Card(
+      key: key, elevation: 0, color: bg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: primaryAccent.withOpacity(0.4), width: 2)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _sectionLabel('ISSUE CATEGORY'),
+          const SizedBox(height: 10),
+          GridView.count(
+            crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.1,
+            children: cats.map((c) {
+              final sel = selCat == c;
+              return GestureDetector(
+                onTap: () => setState(() => selCat = c),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: sel ? primaryAccent.withOpacity(0.1) : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: sel ? primaryAccent : Colors.grey.withOpacity(0.2), width: sel ? 2 : 1),
+                  ),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Icon(_catIcon(c), size: 24, color: sel ? primaryAccent : Colors.grey),
+                    const SizedBox(height: 6),
+                    Text(c, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: sel ? (isDark ? Colors.white : Colors.black87) : Colors.grey), textAlign: TextAlign.center),
+                  ]),
                 ),
-                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(_catIcon(c), size: 24,
-                      color: sel ? AppColors.orange : AppColors.grey),
-                  const SizedBox(height: 6),
-                  Text(c,
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
-                          color: sel ? AppColors.dark : AppColors.grey,
-                          fontFamily: 'Nunito'),
-                      textAlign: TextAlign.center),
-                ]),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-      const SizedBox(height: 20),
-      _sectionLabel('DEPARTMENT'),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 6, runSpacing: 6,
-        children: depts.map((d) => AppChip(
-          label: d, color: deptColors[d] ?? AppColors.grey,
-          active: selDept == d,
-          onTap: () => setState(() => selDept = d),
-          small: true,
-        )).toList(),
-      ),
-      const SizedBox(height: 20),
-      _sectionLabel('SEVERITY LEVEL'),
-      const SizedBox(height: 10),
-      Row(children: ['Low', 'Medium', 'High', 'Critical'].map((s) {
-        final sel   = selSeverity == s;
-        final meta  = severityMeta[s]!;
-        final color = meta['color'] as Color;
-        return Expanded(child: Padding(
-          padding: EdgeInsets.only(right: s != 'Critical' ? 6 : 0),
-          child: GestureDetector(
-            onTap: () => setState(() => selSeverity = s),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: sel ? color.withOpacity(0.12) : AppColors.bg,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: sel ? color : AppColors.border,
-                    width: sel ? 2 : 1),
-              ),
-              child: Column(children: [
-                Icon(meta['icon'] as IconData,
-                    color: sel ? color : AppColors.grey, size: 18),
-                const SizedBox(height: 4),
-                Text(s,
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
-                        color: sel ? color : AppColors.grey,
-                        fontFamily: 'Nunito')),
-              ]),
-            ),
+              );
+            }).toList(),
           ),
-        ));
-      }).toList()),
-      const SizedBox(height: 4),
-      Text(severityMeta[selSeverity]!['desc'] as String,
-          style: TextStyle(
-              fontSize: 11,
-              color: severityMeta[selSeverity]!['color'] as Color,
-              fontFamily: 'Nunito',
-              fontWeight: FontWeight.w600)),
-    ]),
-  );
-
-  // ── STEP 1: Title, Description, Photo ─────────────────────────────────────
-  Widget _step1({Key? key}) => AppCard(
-    key: key,
-    borderColor: AppColors.blue.withOpacity(0.4),
-    borderWidth: 2,
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      MapWidget(label: '${widget.user.ward}, Rampur', height: 110),
-      const SizedBox(height: 16),
-      _sectionLabel('ISSUE TITLE *'),
-      const SizedBox(height: 6),
-      TextField(
-        controller: _titleCtrl,
-        onChanged: (_) => setState(() {}),
-        decoration: InputDecoration(
-          hintText: 'e.g. Pothole at junction near bus stop',
-          filled: true, fillColor: AppColors.bg,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none),
-        ),
-        style: const TextStyle(fontFamily: 'Nunito'),
-      ),
-      const SizedBox(height: 14),
-      _sectionLabel('DESCRIPTION'),
-      const SizedBox(height: 6),
-      TextField(
-        controller: _descCtrl,
-        maxLines: 4,
-        decoration: InputDecoration(
-          hintText:
-              'Describe the issue in detail – location landmarks, duration, affected residents…',
-          filled: true, fillColor: AppColors.bg,
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none),
-        ),
-        style: const TextStyle(fontFamily: 'Nunito'),
-      ),
-      const SizedBox(height: 16),
-      _sectionLabel('PHOTO / EVIDENCE'),
-      const SizedBox(height: 8),
-      GestureDetector(
-        onTap: () => setState(() => hasPhoto = !hasPhoto),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          height: 90,
-          decoration: BoxDecoration(
-            color: hasPhoto ? AppColors.green.withOpacity(0.08) : AppColors.bg,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: hasPhoto ? AppColors.green : AppColors.border,
-                width: hasPhoto ? 2 : 1),
-          ),
-          child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(hasPhoto ? Icons.check_circle_rounded : Icons.add_a_photo_outlined,
-                color: hasPhoto ? AppColors.green : AppColors.grey, size: 28),
-            const SizedBox(height: 6),
-            Text(hasPhoto ? 'Photo attached ✓' : 'Tap to attach photo or video',
-                style: TextStyle(
-                    fontSize: 12, fontFamily: 'Nunito',
-                    color: hasPhoto ? AppColors.green : AppColors.grey,
-                    fontWeight: FontWeight.w600)),
-          ])),
-        ),
-      ),
-      if (_titleCtrl.text.isEmpty)
-        const Padding(
-          padding: EdgeInsets.only(top: 10),
-          child: Text('* Title is required to continue',
-              style: TextStyle(fontSize: 11, color: AppColors.orange,
-                  fontFamily: 'Nunito')),
-        ),
-    ]),
-  );
-
-  // ── STEP 2: Preferences ───────────────────────────────────────────────────
-  Widget _step2({Key? key}) => AppCard(
-    key: key,
-    borderColor: AppColors.purple.withOpacity(0.4),
-    borderWidth: 2,
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _sectionLabel('PREFERRED CONTACT METHOD'),
-      const SizedBox(height: 8),
-      Wrap(
-        spacing: 8, runSpacing: 8,
-        children: contactOpts.map((c) {
-          final sel  = selContact == c;
-          final icon = c == 'Call'
-              ? Icons.phone_outlined
-              : c == 'WhatsApp'
-                  ? Icons.chat_bubble_outline
-                  : c == 'Email'
-                      ? Icons.email_outlined
-                      : Icons.do_not_disturb_on_outlined;
-          return GestureDetector(
-            onTap: () => setState(() => selContact = c),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-              decoration: BoxDecoration(
-                color: sel ? AppColors.purple.withOpacity(0.1) : AppColors.bg,
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                    color: sel ? AppColors.purple : AppColors.border,
-                    width: sel ? 2 : 1),
-              ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(icon, size: 15,
-                    color: sel ? AppColors.purple : AppColors.grey),
-                const SizedBox(width: 6),
-                Text(c,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
-                        color: sel ? AppColors.purple : AppColors.grey,
-                        fontFamily: 'Nunito')),
-              ]),
-            ),
-          );
-        }).toList(),
-      ),
-      const SizedBox(height: 20),
-      _sectionLabel('BEST TIME TO INSPECT'),
-      const SizedBox(height: 8),
-      Row(children: timeOpts.map((t) {
-        final sel  = selTime == t;
-        final icon = t == 'Morning'
-            ? Icons.wb_sunny_outlined
-            : t == 'Afternoon'
-                ? Icons.wb_cloudy_outlined
-                : t == 'Evening'
-                    ? Icons.nights_stay_outlined
-                    : Icons.access_time;
-        return Expanded(child: Padding(
-          padding: EdgeInsets.only(right: t != 'Anytime' ? 6 : 0),
-          child: GestureDetector(
-            onTap: () => setState(() => selTime = t),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: sel ? AppColors.teal.withOpacity(0.1) : AppColors.bg,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: sel ? AppColors.teal : AppColors.border,
-                    width: sel ? 2 : 1),
-              ),
-              child: Column(children: [
-                Icon(icon, color: sel ? AppColors.teal : AppColors.grey, size: 20),
-                const SizedBox(height: 4),
-                Text(t,
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
-                        fontFamily: 'Nunito',
-                        color: sel ? AppColors.teal : AppColors.grey)),
-              ]),
-            ),
-          ),
-        ));
-      }).toList()),
-      const SizedBox(height: 20),
-      AppCard(
-        bgColor: AppColors.blueLight,
-        borderColor: AppColors.blue.withOpacity(0.2),
-        child: Row(children: [
-          const Icon(Icons.info_outline, color: AppColors.blue, size: 16),
-          const SizedBox(width: 8),
-          Expanded(child: Text(
-            'Officials will contact you via $selContact and aim to inspect during $selTime hours.',
-            style: const TextStyle(fontSize: 12, color: AppColors.blue,
-                fontFamily: 'Nunito', height: 1.4),
-          )),
         ]),
       ),
-    ]),
-  );
+    );
+  }
 
-  // ── STEP 3: Review ────────────────────────────────────────────────────────
-  Widget _step3({Key? key}) => AppCard(
-    key: key,
-    borderColor: AppColors.green.withOpacity(0.4),
-    borderWidth: 2,
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Header
-      Row(children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.green.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+  // ── STEP 1: Description, Photo, Map ───────────────────────────────────────
+  Widget _step1({Key? key}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final fieldBg = isDark ? Colors.grey.shade900 : Colors.grey.shade50;
+
+    return Card(
+      key: key, elevation: 0, color: bg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.blue.withOpacity(0.4), width: 2)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            height: 110,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(8),
+              image: const DecorationImage(image: NetworkImage('https://maps.googleapis.com/maps/api/staticmap?center=mahad&zoom=14&size=600x300&sensor=false'), fit: BoxFit.cover)
+            ),
+            child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(20)), child: Text('Ward ${widget.user.ward}, Mahad', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)))),
           ),
-          child: const Icon(Icons.fact_check_outlined,
-              color: AppColors.green, size: 22),
-        ),
-        const SizedBox(width: 12),
-        const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Review Your Report',
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15,
-                  fontFamily: 'Nunito')),
-          Text('Check details before submitting',
-              style: TextStyle(fontSize: 12, color: AppColors.grey,
-                  fontFamily: 'Nunito')),
-        ]),
-      ]),
-      const SizedBox(height: 16),
-      const Divider(height: 1, color: AppColors.border),
-      const SizedBox(height: 16),
-
-      // Summary rows
-      _reviewRow('Category',   selCat,      Icons.category_outlined,        AppColors.orange),
-      _reviewRow('Department', selDept,     Icons.business_outlined,         deptColors[selDept] ?? AppColors.grey),
-      _reviewRow('Severity',   selSeverity, Icons.warning_amber_outlined,    severityMeta[selSeverity]!['color'] as Color),
-      _reviewRow('Title',      _titleCtrl.text.isEmpty ? '—' : _titleCtrl.text,
-                               Icons.title_outlined, AppColors.dark),
-      _reviewRow('Description',
-          _descCtrl.text.isEmpty ? 'No description provided' : _descCtrl.text,
-          Icons.description_outlined, AppColors.grey),
-      _reviewRow('Photo',      hasPhoto ? 'Attached ✓' : 'None',
-                               Icons.photo_outlined,
-                               hasPhoto ? AppColors.green : AppColors.grey),
-      _reviewRow('Contact',    selContact,  Icons.contact_phone_outlined,    AppColors.purple),
-      _reviewRow('Inspection', selTime,     Icons.schedule_outlined,         AppColors.teal),
-
-      const SizedBox(height: 16),
-      const Divider(height: 1, color: AppColors.border),
-      const SizedBox(height: 16),
-
-      // Destination info
-      Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.navy.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.navy.withOpacity(0.15)),
-        ),
-        child: Row(children: [
-          const Icon(Icons.send_rounded, size: 16, color: AppColors.navy),
-          const SizedBox(width: 8),
-          Expanded(child: Text(
-            'Will be sent to: $selDept Department · ${widget.user.ward} Rep · Mayor\'s Office',
-            style: const TextStyle(fontSize: 12, fontFamily: 'Nunito',
-                color: AppColors.navy, fontWeight: FontWeight.w700, height: 1.4),
-          )),
+          const SizedBox(height: 16),
+          _sectionLabel('DESCRIPTION *'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _descCtrl,
+            maxLines: 4,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: 'Describe the issue in detail...',
+              filled: true, fillColor: fieldBg,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _sectionLabel('PHOTO / EVIDENCE'),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => setState(() => hasPhoto = !hasPhoto),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              height: 90,
+              decoration: BoxDecoration(
+                color: hasPhoto ? Colors.green.withOpacity(0.08) : fieldBg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: hasPhoto ? Colors.green : Colors.grey.withOpacity(0.2), width: hasPhoto ? 2 : 1),
+              ),
+              child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Icon(hasPhoto ? Icons.check_circle_rounded : Icons.add_a_photo_outlined, color: hasPhoto ? Colors.green : Colors.grey, size: 28),
+                const SizedBox(height: 6),
+                Text(hasPhoto ? 'Photo attached ✓' : 'Tap to attach photo or video', style: TextStyle(fontSize: 12, color: hasPhoto ? Colors.green : Colors.grey, fontWeight: FontWeight.bold)),
+              ])),
+            ),
+          ),
+          if (_descCtrl.text.isEmpty)
+            const Padding(padding: EdgeInsets.only(top: 10), child: Text('* Description is required to continue', style: TextStyle(fontSize: 11, color: Colors.orange))),
         ]),
       ),
-    ]),
-  );
+    );
+  }
+
+  // ── STEP 2: Review (Formerly Step 3) ──────────────────────────────────────
+  Widget _step2({Key? key}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    return Card(
+      key: key, elevation: 0, color: bg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.green.withOpacity(0.4), width: 2)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.fact_check_outlined, color: Colors.green, size: 22),
+            ),
+            const SizedBox(width: 12),
+            const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Review Your Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+              Text('Check details before submitting', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            ]),
+          ]),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Colors.grey),
+          const SizedBox(height: 16),
+
+          _reviewRow('Category',   selCat,      Icons.category_outlined,    Colors.orange),
+          _reviewRow('Description',_descCtrl.text.isEmpty ? 'No description provided' : _descCtrl.text, Icons.description_outlined, isDark ? Colors.white : Colors.black87),
+          _reviewRow('Photo',      hasPhoto ? 'Attached ✓' : 'None', Icons.photo_outlined, hasPhoto ? Colors.green : Colors.grey),
+
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: primaryAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: primaryAccent.withOpacity(0.15))),
+            child: Row(children: [
+              const Icon(Icons.send_rounded, size: 16, color: primaryAccent),
+              const SizedBox(width: 8),
+              Expanded(child: Text(
+                'Will be sent to: Ward ${widget.user.ward} Rep',
+                style: const TextStyle(fontSize: 12, color: primaryAccent, fontWeight: FontWeight.bold),
+              )),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
 
   Widget _reviewRow(String label, String value, IconData icon, Color color) =>
       Padding(
@@ -808,241 +564,168 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 10),
-          SizedBox(width: 90,
-            child: Text(label,
-                style: const TextStyle(fontSize: 12, color: AppColors.grey,
-                    fontFamily: 'Nunito', fontWeight: FontWeight.w600))),
-          Expanded(child: Text(value,
-              style: const TextStyle(fontSize: 12, fontFamily: 'Nunito',
-                  fontWeight: FontWeight.w800, color: AppColors.dark))),
+          SizedBox(width: 90, child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600))),
+          Expanded(child: Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.bodyMedium?.color))),
         ]),
       );
 
-  // ── REPORTS LIST SECTION ───────────────────────────────────────────────────
+  // ── REPORTS LIST SECTION ──────────────────────────────────────────────────
   Widget _reportsSection({Key? key}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Search bar
+      // Search Bar
       Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.bg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
         child: TextField(
           controller: _searchCtrl,
           onChanged: (val) => setState(() => searchQuery = val),
-          decoration: const InputDecoration(
-            hintText: 'Search reports…',
-            hintStyle: TextStyle(fontSize: 13, fontFamily: 'Nunito',
-                color: AppColors.grey),
-            prefixIcon: Icon(Icons.search, size: 18, color: AppColors.grey),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 12),
+          decoration: InputDecoration(
+            hintText: 'Search my reports...',
+            hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+            prefixIcon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.black54),
+            filled: true,
+            fillColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+            contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
           ),
-          style: const TextStyle(fontSize: 13, fontFamily: 'Nunito'),
         ),
       ),
-      const SizedBox(height: 12),
 
-      // Filter chips
+      // Filter chips 
       SizedBox(height: 36, child: ListView(
         scrollDirection: Axis.horizontal,
         children: filters.map((f) {
-          final count = f == 'All'
-              ? myReports.length
-              : myReports.where((r) => r.status == f).length;
+          final count = f == 'All' ? myReports.length : myReports.where((r) => r.status == f).length;
+          final active = filterStatus == f;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: AppChip(
-              label: '$f ($count)',
-              color: _filterColor(f),
-              active: filterStatus == f,
+            child: InkWell(
               onTap: () => setState(() => filterStatus = f),
-              small: true,
+              borderRadius: BorderRadius.circular(20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: active ? _filterColor(f) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: active ? _filterColor(f) : Colors.grey.withOpacity(0.3), width: 1.5)
+                ),
+                child: Text('$f ($count)', style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.bold,
+                  color: active ? Colors.white : (isDark ? Colors.white70 : Colors.black87)
+                )),
+              ),
             ),
           );
         }).toList(),
       )),
-      const SizedBox(height: 12),
+      const SizedBox(height: 16),
 
-      // Count
-      Text('${filteredReports.length} report${filteredReports.length != 1 ? 's' : ''} found',
-          style: const TextStyle(fontSize: 12, color: AppColors.grey,
-              fontFamily: 'Nunito')),
-      const SizedBox(height: 10),
-
-      // Report cards
       if (filteredReports.isEmpty)
         _emptyState()
       else
         ...filteredReports.asMap().entries.map((entry) {
-          final r         = entry.value;
+          final r = entry.value;
           final isExpanded = _expanded.contains(r.id);
-          final sc        = _statusColor(r.status);
 
-          return TweenAnimationBuilder<double>(
+          return Card(
             key: ValueKey(r.id),
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutQuad,
-            builder: (context, val, child) => Transform.translate(
-              offset: Offset(0, 12 * (1 - val)),
-              child: Opacity(opacity: val, child: child),
-            ),
-            child: AppCard(
-              onTap: () => setState(() {
-                isExpanded ? _expanded.remove(r.id) : _expanded.add(r.id);
-              }),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                // Top row
-                Row(children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: (deptColors[r.dept] ?? AppColors.grey).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(10),
+            margin: const EdgeInsets.only(bottom: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            child: InkWell(
+              onTap: () => setState(() { isExpanded ? _expanded.remove(r.id) : _expanded.add(r.id); }),
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: (catColors[r.category] ?? Colors.grey).withOpacity(0.2),
+                      child: Icon(_catIcon(r.category), size: 16, color: catColors[r.category] ?? Colors.grey),
                     ),
-                    child: Icon(_deptIcon(r.dept), size: 16,
-                        color: deptColors[r.dept] ?? AppColors.grey),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(r.title,
-                        style: const TextStyle(fontWeight: FontWeight.w900,
-                            fontSize: 14, fontFamily: 'Nunito')),
-                    Text('${r.dept} · ${r.ticket} · ${r.time}',
-                        style: const TextStyle(fontSize: 11, color: AppColors.grey,
-                            fontFamily: 'Nunito')),
-                  ])),
-                  StatusBadge(status: r.status),
-                ]),
+                    const SizedBox(width: 10),
+                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(r.category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('${r.ticket} • ${r.time}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    ])),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(color: _statusColor(r.status).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                      child: Text(r.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _statusColor(r.status))),
+                    )
+                  ]),
 
-                // Progress bar for In Progress
-                if (r.status == 'In Progress') ...[
-                  const SizedBox(height: 10),
-                  AnimatedBar(value: 50, color: AppColors.blue, height: 5),
-                ],
-
-                // Expanded detail
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutCubic,
-                  child: isExpanded
-                      ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          const SizedBox(height: 14),
-                          const Divider(height: 1, color: AppColors.border),
-                          const SizedBox(height: 14),
-
-                          // Description
-                          if (r.desc.isNotEmpty) ...[
-                            Text(r.desc,
-                                style: const TextStyle(fontSize: 13,
-                                    fontFamily: 'Nunito', color: AppColors.dark,
-                                    height: 1.5)),
-                            const SizedBox(height: 14),
-                          ],
-
-                          // Ward info
-                          Row(children: [
-                            const Icon(Icons.location_on_outlined,
-                                size: 14, color: AppColors.grey),
-                            const SizedBox(width: 4),
-                            Text(r.ward,
-                                style: const TextStyle(fontSize: 12,
-                                    color: AppColors.grey, fontFamily: 'Nunito')),
-                          ]),
-                          const SizedBox(height: 14),
-
-                          // Action row
-                          Row(children: [
-                            // Upvote
-                            GestureDetector(
-                              onTap: () => _toggleUpvote(r.id),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    child: isExpanded
+                        ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const SizedBox(height: 12),
+                            if (r.desc.isNotEmpty) ...[
+                              Text(r.desc, style: const TextStyle(fontSize: 13, height: 1.5)),
+                              const SizedBox(height: 12),
+                            ],
+                            Row(children: [
+                              const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                              const SizedBox(width: 4),
+                              Text(r.ward, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            ]),
+                            const SizedBox(height: 16),
+                            const Divider(height: 1),
+                            const SizedBox(height: 8),
+                            
+                            // ── STATUS UPDATER AND WITHDRAW ──
+                            Row(children: [
+                              const Text('Update Status: ', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                              const SizedBox(width: 8),
+                              Container(
+                                height: 30,
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
                                 decoration: BoxDecoration(
-                                  color: (_upvoted[r.id] == true)
-                                      ? AppColors.orange.withOpacity(0.12)
-                                      : AppColors.bg,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: (_upvoted[r.id] == true)
-                                        ? AppColors.orange
-                                        : AppColors.border,
+                                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey.withOpacity(0.3))
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: r.status,
+                                    isDense: true,
+                                    icon: const Icon(Icons.keyboard_arrow_down, size: 16),
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _statusColor(r.status)),
+                                    items: ['Unresolved', 'In Progress', 'Resolved'].map((s) {
+                                      return DropdownMenuItem(value: s, child: Text(s));
+                                    }).toList(),
+                                    onChanged: (newStatus) {
+                                      if (newStatus != null) {
+                                        setState(() => r.status = newStatus);
+                                      }
+                                    },
                                   ),
                                 ),
-                                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(
-                                    (_upvoted[r.id] == true)
-                                        ? Icons.thumb_up_rounded
-                                        : Icons.thumb_up_outlined,
-                                    size: 14,
-                                    color: (_upvoted[r.id] == true)
-                                        ? AppColors.orange
-                                        : AppColors.grey,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text('${_upvotes[r.id] ?? 0}',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800,
-                                          color: (_upvoted[r.id] == true)
-                                              ? AppColors.orange
-                                              : AppColors.grey,
-                                          fontFamily: 'Nunito')),
-                                ]),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-
-                            // Share
-                            _iconAction(Icons.share_outlined, AppColors.blue, () {}),
-                            const SizedBox(width: 8),
-
-                            const Spacer(),
-
-                            // Delete (only Pending)
-                            if (r.status == 'Pending')
-                              GestureDetector(
-                                onTap: () => _deleteReport(r),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.red.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color: AppColors.red.withOpacity(0.3)),
-                                  ),
-                                  child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                                    Icon(Icons.delete_outline,
-                                        size: 14, color: AppColors.red),
-                                    SizedBox(width: 4),
-                                    Text('Withdraw',
-                                        style: TextStyle(fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppColors.red,
-                                            fontFamily: 'Nunito')),
-                                  ]),
-                                ),
-                              ),
-                          ]),
-                        ])
-                      : const SizedBox.shrink(),
-                ),
-
-                // Expand indicator
-                const SizedBox(height: 8),
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(
-                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    size: 18, color: AppColors.grey,
+                              const Spacer(),
+                              if (r.status == 'Unresolved')
+                                TextButton.icon(
+                                  onPressed: () => _deleteReport(r), 
+                                  icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red), 
+                                  label: const Text('Withdraw', style: TextStyle(color: Colors.red, fontSize: 12))
+                                )
+                            ]),
+                          ])
+                        : const SizedBox.shrink(),
                   ),
+                  
+                  if (!isExpanded)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 8),
+                      child: Center(child: Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey)),
+                    )
                 ]),
-              ]),
+              ),
             ),
           );
         }).toList(),
@@ -1052,57 +735,32 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   Widget _emptyState() => Container(
     padding: const EdgeInsets.symmetric(vertical: 40),
     child: Column(children: [
-      Icon(Icons.inbox_outlined, size: 48, color: AppColors.grey.withOpacity(0.4)),
+      Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.withOpacity(0.4)),
       const SizedBox(height: 12),
       Text(
-        searchQuery.isNotEmpty
-            ? 'No reports match "$searchQuery"'
-            : 'No ${filterStatus == 'All' ? '' : filterStatus.toLowerCase()} reports yet',
-        style: const TextStyle(fontSize: 14, color: AppColors.grey,
-            fontFamily: 'Nunito', fontWeight: FontWeight.w600),
+        searchQuery.isNotEmpty ? 'No reports match "$searchQuery"' : 'No ${filterStatus == 'All' ? '' : filterStatus.toLowerCase()} reports yet',
+        style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w600),
         textAlign: TextAlign.center,
-      ),
-      const SizedBox(height: 16),
-      AppBtn(
-        label: '+ File a Report', small: true,
-        onTap: () => setState(() { showForm = true; _step = 0; }),
       ),
     ]),
   );
 
-  Widget _iconAction(IconData icon, Color color, VoidCallback onTap) =>
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(7),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.25)),
-          ),
-          child: Icon(icon, size: 14, color: color),
-        ),
-      );
-
-  // ── SMALL HELPERS ──────────────────────────────────────────────────────────
-  Widget _sectionLabel(String text) => Text(text,
-      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800,
-          color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito'));
+  Widget _sectionLabel(String text) => Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5));
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'Resolved':    return AppColors.green;
-      case 'In Progress': return AppColors.blue;
-      default:            return AppColors.gold;
+      case 'Resolved':    return Colors.green;
+      case 'In Progress': return Colors.blue;
+      default:            return Colors.amber;
     }
   }
 
   Color _filterColor(String f) {
     switch (f) {
-      case 'Resolved':    return AppColors.green;
-      case 'In Progress': return AppColors.blue;
-      case 'Pending':     return AppColors.gold;
-      default:            return AppColors.orange;
+      case 'Resolved':    return Colors.green;
+      case 'In Progress': return Colors.blue;
+      case 'Unresolved':  return Colors.amber;
+      default:            return primaryAccent;
     }
   }
 
@@ -1116,20 +774,10 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       default:            return Icons.help_outline;
     }
   }
-
-  IconData _deptIcon(String dept) {
-    switch (dept) {
-      case 'Water':       return Icons.water_drop_outlined;
-      case 'Sanitation':  return Icons.delete_sweep_outlined;
-      case 'Electricity': return Icons.bolt_outlined;
-      case 'Roads': return Icons.add_road_outlined;
-      default:            return Icons.business_outlined;
-    }
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TRENDING TICKER
+// SUBTLE TRENDING TICKER
 // ─────────────────────────────────────────────────────────────────────────────
 class _TrendingTicker extends StatefulWidget {
   const _TrendingTicker();
@@ -1138,17 +786,14 @@ class _TrendingTicker extends StatefulWidget {
   State<_TrendingTicker> createState() => _TrendingTickerState();
 }
 
-class _TrendingTickerState extends State<_TrendingTicker>
-    with SingleTickerProviderStateMixin {
+class _TrendingTickerState extends State<_TrendingTicker> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<Offset> _slide;
 
   static const _items = [
-    '🔴 Ward 3: 38 open water complaints this week',
-    '🟡 MG Road pothole cluster – 11 upvotes',
-    '🟢 Sector 5 drainage – marked Resolved today',
-    '🔵 New: LED street-light tender awarded',
-
+    'Ward 3: 38 open water complaints this week',
+    'Sector 5 drainage marked Resolved today',
+    'Streetlight maintenance scheduled for Ward 4',
   ];
 
   int _current = 0;
@@ -1156,11 +801,8 @@ class _TrendingTickerState extends State<_TrendingTicker>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
-    _slide = Tween<Offset>(
-            begin: const Offset(0, 1), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _slide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
     _startLoop();
   }
@@ -1183,26 +825,18 @@ class _TrendingTickerState extends State<_TrendingTicker>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
-      color: AppColors.navy,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: isDark ? primaryAccent.withOpacity(0.1) : primaryAccent.withOpacity(0.05),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-              color: AppColors.orange,
-              borderRadius: BorderRadius.circular(4)),
-          child: const Text('LIVE',
-              style: TextStyle(color: Colors.white, fontSize: 10,
-                  fontWeight: FontWeight.w900, fontFamily: 'Nunito',
-                  letterSpacing: 1)),
-        ),
+        const Icon(Icons.info_outline, size: 14, color: primaryAccent),
         const SizedBox(width: 10),
         Expanded(child: ClipRect(child: SlideTransition(
           position: _slide,
           child: Text(_items[_current],
-              style: const TextStyle(color: Colors.white70, fontSize: 12,
-                  fontFamily: 'Nunito'),
+              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12, fontWeight: FontWeight.w600),
               maxLines: 1, overflow: TextOverflow.ellipsis),
         ))),
       ]),

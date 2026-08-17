@@ -33,8 +33,9 @@ dependencies:
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.0        # if you need auth
   cloud_firestore: ^5.4.0      # if you need database
-  firebase_storage: ^12.3.0    # if you need storage
-
+  firebase_storage: ^12.3.0 
+  image_picker: ^1.0.7   # if you need storage
+  provider: ^6.1.2
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
