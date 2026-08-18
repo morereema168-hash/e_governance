@@ -2,7 +2,7 @@ import 'package:e_governance/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart'; // ADDED: Provider import
+import 'package:provider/provider.dart';
 import 'theme.dart';
 import 'models/models.dart';
 import 'screens/login_screen.dart';
@@ -12,7 +12,8 @@ import 'screens/community_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/cityinfo_screen.dart';
 import 'screens/mayor_dashboard_screen.dart';
-import 'screens/nagar_sevak_dashboard.dart'; 
+import 'screens/nagar_sevak_dashboard.dart';
+import 'screens/fundraise_screen.dart'; 
 import 'widgets/shared_widgets.dart';
 import 'services/settings_provider.dart';
 
@@ -26,7 +27,6 @@ void main() async {
   
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   
-  // FIXED: Wrapped the entire app in the MultiProvider so all screens can access SettingsProvider
   runApp(
     MultiProvider(
       providers: [
@@ -42,7 +42,7 @@ class NagarPanchayatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Nagar Panchayat – Rampur',
+      title: 'Nagar Panchayat – Mahad',
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
       home: const _Root(),
@@ -58,11 +58,13 @@ class _Root extends StatefulWidget {
 
 class _RootState extends State<_Root> {
   AppUser? user;
-  String tab = 'vote';
+  
+  // App now opens directly into the Community ('feed') tab
+  String tab = 'feed';
 
   void _login(AppUser u) => setState(() {
     user = u;
-    tab = 'vote';
+    tab = 'feed'; 
   });
   
   void _logout() => setState(() {
@@ -76,25 +78,18 @@ class _RootState extends State<_Root> {
     if (user == null) return LoginScreen(onLogin: _login);
     return Scaffold(
       body: SafeArea(
-        // THE ULTIMATE LAYOUT FIX
-        // This Stack ensures the TopBar has full permission to draw the dropdown menus
-        // anywhere on the screen, while the page content sits safely underneath.
         child: Stack(
           children: [
-            // 1. PAGE CONTENT (Pushed down by exactly 60 pixels to clear the top bar)
             Positioned.fill(
               top: 60, 
               child: _page(),
             ),
-            
-            // 2. TOP BAR & DROPDOWN MENUS (Takes the whole screen but is mostly transparent)
             Positioned.fill(
               child: _TopBar(user: user!, onLogout: _logout, setTab: _setTab),
             ),
           ],
         ),
       ),
-      // 2. UPDATED: Hide the bottom navigation bar if the user is the Mayor OR Nagar Sevak
       bottomNavigationBar: (user!.role == 'mayor' || user!.role == 'nagar_sevak')
           ? null
           : _BottomNav(active: tab, setTab: _setTab),
@@ -102,17 +97,14 @@ class _RootState extends State<_Root> {
   }
 
   Widget _page() {
-    // Both Citizen, Mayor, and Nagar Sevak can access the City Info page from the top bar
     if (tab == 'cityinfo') {
       return const CityInfoScreen();
     }
 
-    // If the user is the Mayor, show the Mayor Dashboard instead of standard tabs!
     if (user!.role == 'mayor') {
       return MayorDashboardScreen(user: user!);
     }
 
-    // 3. ADDED: If the user is the Nagar Sevak, show the Nagar Sevak Dashboard!
     if (user!.role == 'nagar_sevak') {
       return NagarSevakDashboard(user: user!);
     }
@@ -123,12 +115,14 @@ class _RootState extends State<_Root> {
         return CommunityScreen(user: user!);
       case 'report':
         return ReportScreen(user: user!);
-     
-    
+      case 'vote': 
+        return const VoteScreen();
+      case 'fundraise': 
+        return const FundraiseScreen();
       case 'profile':
         return ProfileScreen(user: user!, onLogout: _logout);
       default:
-        return const VoteScreen();
+        return CommunityScreen(user: user!); 
     }
   }
 }
@@ -155,11 +149,9 @@ class _TopBarState extends State<_TopBar> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 1. CLICK-AWAY OVERLAY (Only visible when a menu is open)
-        // This catches clicks outside the dropdown to close it, without blocking the UI when closed.
         if (showN || showP)
           Positioned.fill(
-            top: 60, // Only covers the area below the top bar
+            top: 60, 
             child: GestureDetector(
               onTap: () => setState(() {
                 showN = false;
@@ -169,12 +161,11 @@ class _TopBarState extends State<_TopBar> {
             ),
           ),
 
-        // 2. THE ACTUAL TOP BAR
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          height: 60, // Fixed height for consistency
+          height: 60, 
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
@@ -195,7 +186,6 @@ class _TopBarState extends State<_TopBar> {
             ),
             child: Row(
               children: [
-                // Logo
                 Container(
                   width: 38,
                   height: 38,
@@ -232,7 +222,7 @@ class _TopBarState extends State<_TopBar> {
                       ),
                     ),
                     Text(
-                      'Rampur · Digital Gov',
+                      'Mahad· Digital Gov',
                       style: TextStyle(
                         fontSize: 10,
                         color: AppColors.grey,
@@ -242,12 +232,10 @@ class _TopBarState extends State<_TopBar> {
                   ],
                 ),
                 const Spacer(),
-                // City info
                 _IconBtn(
                   icon: Icons.public,
                   onTap: () {
                     setState(() { showN = false; showP = false; });
-                    // 4. UPDATED: Ensure Nagar Sevak globe icon routes to dashboard, not city info
                     if (widget.user.role == 'mayor' || widget.user.role == 'nagar_sevak') {
                       widget.setTab('dashboard'); 
                     } else {
@@ -256,7 +244,6 @@ class _TopBarState extends State<_TopBar> {
                   },
                 ),
                 const SizedBox(width: 8),
-                // Notifications
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -283,7 +270,6 @@ class _TopBarState extends State<_TopBar> {
                   ],
                 ),
                 const SizedBox(width: 8),
-                // Avatar / profile
                 GestureDetector(
                   onTap: () => setState(() {
                     showP = !showP;
@@ -300,16 +286,15 @@ class _TopBarState extends State<_TopBar> {
           ),
         ),
 
-        // 3. THE DROPDOWN PANELS
         if (showN)
           Positioned(
-            top: 68, // Just below the Top Bar
+            top: 68, 
             right: 8,
             child: _NotifPanel(onClose: () => setState(() => showN = false)),
           ),
         if (showP)
           Positioned(
-            top: 68, // Just below the Top Bar
+            top: 68, 
             right: 8,
             child: _ProfilePanel(
               user: widget.user,
@@ -490,7 +475,7 @@ class _ProfilePanel extends StatelessWidget {
       elevation: 20,
       borderRadius: BorderRadius.circular(18),
       color: Colors.white,
-      clipBehavior: Clip.antiAlias, // Ensures InkWell ripples respect the rounded corners
+      clipBehavior: Clip.antiAlias,
       child: Container(
         width: 210,
         decoration: BoxDecoration(
@@ -548,8 +533,8 @@ class _ProfilePanel extends StatelessWidget {
             
             InkWell(
               onTap: () {
-                onClose(); // Close the menu
-                setTab('profile'); // Navigate to the ProfileScreen
+                onClose(); 
+                setTab('profile'); 
               },
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -625,6 +610,7 @@ class _BottomNav extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          // 1. Report (Far Left)
           _NavBtn(
             id: 'report',
             icon: Icons.assignment_outlined,
@@ -632,6 +618,26 @@ class _BottomNav extends StatelessWidget {
             active: active == 'report',
             onTap: setTab,
           ),
+          
+          // 2. Fundraise (Center-Left)
+          _NavBtn(
+            id: 'fundraise',
+            icon: Icons.volunteer_activism, 
+            label: 'Fundraise',
+            active: active == 'fundraise',
+            onTap: setTab,
+          ),
+
+          // 3. Community (Center-Right)
+          _NavBtn(
+            id: 'feed',
+            icon: Icons.people_outline,
+            label: 'Community',
+            active: active == 'feed',
+            onTap: setTab,
+          ),
+          
+          // 4. Vote (Far Right)
           _NavBtn(
             id: 'vote',
             icon: Icons.how_to_vote_outlined,
@@ -639,62 +645,6 @@ class _BottomNav extends StatelessWidget {
             active: active == 'vote',
             onTap: setTab,
           ),
-          // Community center fab
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setTab('feed'),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 56,
-                    height: 56,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: active == 'feed'
-                            ? [AppColors.orange, AppColors.orangeDark]
-                            : [AppColors.navy, AppColors.navyLight],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (active == 'feed'
-                                      ? AppColors.orange
-                                      : AppColors.navy)
-                                  .withOpacity(0.4),
-                          blurRadius: 24,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        Text(
-                          'Community',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 7,
-                            fontFamily: 'Nunito',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
         ],
       ),
     );

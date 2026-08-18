@@ -1,0 +1,12 @@
+{
+  "welcome": "Welcome",
+  "login": "Login",
+  "raiseComplaint": "Raise Complaint",
+  "category": "Category",
+  "garbage": "Garbage",
+  "roads": "Roads",
+  "water": "Water",
+  "streetlights": "Streetlights",
+  "trackStatus": "Track Status",
+  "submit": "Submit"
+}

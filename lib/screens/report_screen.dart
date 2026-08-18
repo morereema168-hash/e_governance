@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/models.dart';
+import '../theme.dart'; // ADDED: Import theme to access AppColors
 import '../widgets/shared_widgets.dart';
-
-const Color primaryAccent = Color(0xFF2563EB);
 
 // Local Mock Report Model
 class MockReport {
   final String id;
   final String category;
   final String desc;
-  String status; // Made mutable so the user can mark it
+  String status; 
   final String time;
   final String ticket;
   final String ward;
@@ -32,8 +31,8 @@ class ReportScreen extends StatefulWidget {
 class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMixin {
   // ── DATA ──────────────────────────────────────────────────────────────────
   final List<MockReport> myReports = [
-    MockReport(id: '1', category: 'Water Leak',  desc: 'Ward 3 dry since Monday. No water for 3 days.',      status: 'Unresolved',  time: '1d ago', ticket: '#8831', ward: 'Ward 3'),
-    MockReport(id: '2', category: 'Pothole',     desc: 'Dangerous pothole on MG Road near the bus stop.',    status: 'In Progress', time: '2d ago', ticket: '#8832', ward: 'Ward 3'),
+    MockReport(id: '1', category: 'Water leak',  desc: 'Ward 3 dry since Monday. No water for 3 days.',      status: 'Unresolved',  time: '1d ago', ticket: '#8831', ward: 'Ward 3'),
+    MockReport(id: '2', category: 'Potholes',    desc: 'Dangerous pothole on MG Road near the bus stop.',    status: 'In Progress', time: '2d ago', ticket: '#8832', ward: 'Ward 3'),
     MockReport(id: '3', category: 'Drainage',    desc: 'Open drain near school. Children at risk.',          status: 'Resolved',    time: '3d ago', ticket: '#8829', ward: 'Ward 3'),
   ];
 
@@ -49,18 +48,29 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
 
   // ── FORM STATE (multi-step) ───────────────────────────────────────────────
   int    _step        = 0;
-  String selCat       = 'Pothole';
+  String selCat       = 'Potholes';
+  String customCat    = ''; // Stores user input when "Other" is selected
   bool   hasPhoto     = false;
   final _descCtrl  = TextEditingController();
+  final _customCatCtrl = TextEditingController();
 
   // ── CONSTANTS ─────────────────────────────────────────────────────────────
-  final cats = ['Streetlight', 'Water Leak', 'Pothole', 'Garbage', 'Drainage', 'Other'];
+  final cats = ['Electricity', 'Water leak', 'Potholes', 'Garbage', 'Drainage', 'Other'];
   final filters = ['All', 'Unresolved', 'In Progress', 'Resolved'];
 
+  final Map<String, String> catImages = {
+    'Electricity': 'assets/images/Electricity.jpeg',
+    'Water leak':  'assets/images/Water leak.jpeg',
+    'Potholes':     'assets/images/Potholes.jpeg',
+    'Garbage':     'assets/images/Garbage.jpeg',
+    'Drainage':    'assets/images/Drainage.jpeg',
+    'Other':       'assets/images/Other.jpeg', 
+  };
+
   final catColors = const {
-    'Streetlight': Colors.amber,
-    'Water Leak':  Colors.teal,
-    'Pothole':     Colors.orange,
+    'Electricity': Colors.amber,
+    'Water leak':  Colors.teal,
+    'Potholes':     Colors.orange,
     'Garbage':     Colors.green,
     'Drainage':    Colors.blue,
     'Other':       Colors.deepPurple,
@@ -82,10 +92,14 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     setState(() => submitting = true);
     await Future.delayed(const Duration(milliseconds: 900));
     final newId = '${DateTime.now().millisecondsSinceEpoch}';
+    
+    // If "Other" is selected, use the custom text as the category label
+    final finalCategory = selCat == 'Other' && customCat.isNotEmpty ? customCat : selCat;
+
     setState(() {
       myReports.insert(0, MockReport(
         id:       newId,
-        category: selCat,
+        category: finalCategory,
         desc:     _descCtrl.text,
         status:   'Unresolved',
         time:     'Just now',
@@ -101,7 +115,9 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       showForm  = false;
       _step     = 0;
       _descCtrl.clear();
-      selCat    = 'Pothole';
+      _customCatCtrl.clear();
+      selCat    = 'Potholes';
+      customCat = '';
       hasPhoto  = false;
     });
   }
@@ -113,6 +129,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
         content: const Text('Report withdrawn.', style: TextStyle(fontFamily: 'Nunito')),
         action: SnackBarAction(
           label: 'UNDO',
+          textColor: AppColors.orange,
           onPressed: () {
             setState(() {
               myReports.add(r);
@@ -131,6 +148,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   void dispose() {
     _searchCtrl.dispose();
     _descCtrl.dispose();
+    _customCatCtrl.dispose();
     super.dispose();
   }
 
@@ -138,54 +156,11 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final isWide = MediaQuery.of(context).size.width > 700;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 80),
       child: Column(children: [
-        // HEADER
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.2))),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('MY REPORTS', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w800, letterSpacing: 1)),
-              const SizedBox(height: 4),
-              Text('Report Tracker', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
-              const SizedBox(height: 4),
-              const Text('Track, update, and manage your personal civic reports.', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              const SizedBox(height: 16),
-              Row(children: [
-                ElevatedButton.icon(
-                  onPressed: () => setState(() { showForm = true; _step = 0; }),
-                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                  label: const Text('New Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryAccent,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
-                  ),
-                ),
-                const SizedBox(width: 8),
-                TextButton(
-                  onPressed: () => setState(() => showForm = false),
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: Colors.grey.withOpacity(0.3)))
-                  ),
-                  child: Text('My Reports (${myReports.length})', style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
-                ),
-              ]),
-            ],
-          )
-        ),
-
-        const _TrendingTicker(),
-
+        _buildHeader(),
         Padding(
           padding: EdgeInsets.all(isWide ? 24 : 14),
           child: isWide ? _wideLayout() : _narrowLayout(),
@@ -194,7 +169,81 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     );
   }
 
-  // ── LAYOUTS ───────────────────────────────────────────────────────────────
+  // ── HEADER MATCHING VOTE SCREEN ──
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/fist.jpeg'),
+          fit: BoxFit.cover,
+          alignment: Alignment.center,
+        ),
+      ),
+      child: Container(
+        color: AppColors.navy.withOpacity(0.75), 
+        padding: const EdgeInsets.fromLTRB(20, 72, 20, 40),
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'MY REPORTS', 
+              style: TextStyle(
+                fontSize: 10, 
+                color: Color(0xFFFB923C), 
+                fontWeight: FontWeight.w800, 
+                letterSpacing: 1, 
+                fontFamily: 'Nunito'
+              )
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Report Tracker', 
+              style: TextStyle(
+                fontSize: 24, 
+                fontWeight: FontWeight.w900, 
+                color: Colors.white, 
+                fontFamily: 'Nunito'
+              )
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Track, update, and manage your personal civic reports.', 
+              style: TextStyle(
+                fontSize: 13, 
+                color: Colors.white70, 
+                height: 1.4,
+                fontFamily: 'Nunito'
+              )
+            ),
+            const SizedBox(height: 16),
+            Row(children: [
+              ElevatedButton.icon(
+                onPressed: () => setState(() { showForm = true; _step = 0; }),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                label: const Text('New Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Nunito')),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.orange,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: () => setState(() => showForm = false),
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.white38))
+                ),
+                child: Text('My Reports (${myReports.length})', style: const TextStyle(color: Colors.white, fontFamily: 'Nunito')),
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _wideLayout() => Row(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -217,7 +266,14 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     transitionBuilder: _fadeSlide,
     child: showForm
         ? _formPanel(key: const ValueKey('form'))
-        : _reportsSection(key: const ValueKey('list')),
+        : Column(
+            key: const ValueKey('list'),
+            children: [
+              _statsPanel(),
+              const SizedBox(height: 20),
+              _reportsSection(),
+            ],
+          ),
   );
 
   Widget _fadeSlide(Widget child, Animation<double> animation) => FadeTransition(
@@ -231,91 +287,44 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     ),
   );
 
-  // ── STATS PANEL (wide, no form) ───────────────────────────────────────────
   Widget _statsPanel({Key? key}) {
-    final total      = myReports.length;
-    final resolved   = myReports.where((r) => r.status == 'Resolved').length;
-    final pending    = myReports.where((r) => r.status == 'Unresolved').length;
-    final inProgress = myReports.where((r) => r.status == 'In Progress').length;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Overview', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-      const SizedBox(height: 14),
-      GridView.count(
-        crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 2.2,
-        children: [
-          _statCard('Total',       total.toString(),      Colors.orange, Icons.assignment_outlined),
-          _statCard('Resolved',    resolved.toString(),   Colors.green,  Icons.check_circle_outline),
-          _statCard('In Progress', inProgress.toString(), Colors.blue,   Icons.autorenew),
-          _statCard('Unresolved',  pending.toString(),    Colors.amber,  Icons.hourglass_empty),
-        ],
-      ),
-      const SizedBox(height: 16),
-      Card(
-        color: isDark ? primaryAccent.withOpacity(0.2) : primaryAccent.withOpacity(0.05),
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: primaryAccent.withOpacity(0.3))),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: primaryAccent, borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 22),
+      AppCard(
+        bgColor: AppColors.orangeLight,
+        borderColor: AppColors.orange.withOpacity(0.3),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [AppColors.orange, AppColors.orangeDark]),
+                borderRadius: BorderRadius.circular(12),
               ),
-              const SizedBox(width: 12),
-              const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('File a New Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-                Text('Takes less than 1 minute', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              ])),
-            ]),
-            const SizedBox(height: 14),
-            ElevatedButton(
-              onPressed: () => setState(() { showForm = true; _step = 0; }),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryAccent,
-                minimumSize: const Size(double.infinity, 44),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-              ),
-              child: const Text('Start Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 22),
             ),
+            const SizedBox(width: 12),
+            const Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('File a New Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
+              Text('Takes less than 1 minute', style: TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
+            ])),
           ]),
-        ),
+          const SizedBox(height: 14),
+          AppBtn(
+            label: 'Start Report', 
+            full: true, 
+            onTap: () => setState(() { showForm = true; _step = 0; })
+          ),
+        ]),
       ),
     ]);
   }
 
-  Widget _statCard(String label, String value, Color color, IconData icon) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(top: BorderSide(color: color, width: 3)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8)],
-      ),
-      child: Row(children: [
-        Icon(icon, color: color, size: 22),
-        const SizedBox(width: 10),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: color)),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-        ]),
-      ]),
-    );
-  }
-
-  // ── 3-STEP FORM ────────────────────────────────────────────────────────────
   Widget _formPanel({Key? key}) {
     if (submitted) {
       return Card(
         key: key,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.green.withOpacity(0.5))),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: AppColors.green.withOpacity(0.5))),
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Column(children: [
@@ -324,12 +333,12 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
               duration: const Duration(milliseconds: 800),
               curve: Curves.elasticOut,
               builder: (_, v, child) => Transform.scale(scale: v, child: child),
-              child: const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              child: const Icon(Icons.check_circle, color: AppColors.green, size: 64),
             ),
             const SizedBox(height: 16),
-            const Text('Report Submitted!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green)),
+            const Text('Report Submitted!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.green, fontFamily: 'Nunito')),
             const SizedBox(height: 4),
-            Text('Sent to Ward ${widget.user.ward} Rep', style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            Text('Sent to Ward ${widget.user.ward} Rep', style: const TextStyle(fontSize: 13, color: AppColors.grey, fontFamily: 'Nunito')),
           ]),
         ),
       );
@@ -359,14 +368,14 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             duration: const Duration(milliseconds: 300),
             height: 4,
             decoration: BoxDecoration(
-              color: done || current ? primaryAccent : Colors.grey.withOpacity(0.3),
+              color: done || current ? AppColors.orange : Colors.grey.withOpacity(0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 4),
           Text(labels[i], style: TextStyle(
-            fontSize: 10, fontWeight: FontWeight.w700,
-            color: current ? primaryAccent : done ? Colors.green : Colors.grey,
+            fontSize: 10, fontWeight: FontWeight.w700, fontFamily: 'Nunito',
+            color: current ? AppColors.orange : done ? AppColors.green : Colors.grey,
           )),
         ])),
         if (i < 2) const SizedBox(width: 4),
@@ -378,7 +387,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     switch (_step) {
       case 0:  return _step0(key: const ValueKey(0));
       case 1:  return _step1(key: const ValueKey(1));
-      default: return _step2(key: const ValueKey(2)); // Now Step 2 is Review
+      default: return _step2(key: const ValueKey(2)); 
     }
   }
 
@@ -387,61 +396,117 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       Expanded(child: TextButton(
         onPressed: () => setState(() => _step--),
         style: TextButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: Colors.grey.withOpacity(0.3)))),
-        child: const Text('← Back', style: TextStyle(color: Colors.grey)),
+        child: const Text('← Back', style: TextStyle(color: AppColors.grey, fontFamily: 'Nunito', fontWeight: FontWeight.bold)),
       )),
     if (_step > 0) const SizedBox(width: 10),
     Expanded(child: _step < 2
-        ? ElevatedButton(
-            onPressed: () {
-              if (_step == 1 && _descCtrl.text.isEmpty) return; // Validation requires description now
+        ? AppBtn(
+            label: 'Continue →',
+            color: AppColors.orange,
+            full: true,
+            onTap: () {
+              if (_step == 0 && selCat == 'Other' && customCat.isEmpty) return;
+              if (_step == 1 && _descCtrl.text.isEmpty) return;
               setState(() => _step++);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: primaryAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-            child: const Text('Continue →', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           )
-        : ElevatedButton(
-            onPressed: submitting ? null : _submitReport,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-            child: Text(submitting ? 'Submitting…' : 'Submit Report', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        : AppBtn(
+            label: submitting ? 'Submitting…' : 'Submit Report',
+            color: AppColors.green,
+            full: true,
+            disabled: submitting,
+            onTap: _submitReport,
           )),
   ]);
 
-  // ── STEP 0: Category ──────────────────────────────────────────────────────
+  // ── STEP 0: Category with Images & "Other" Dropdown Prompt ────────────────
   Widget _step0({Key? key}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
 
     return Card(
       key: key, elevation: 0, color: bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: primaryAccent.withOpacity(0.4), width: 2)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: AppColors.orange.withOpacity(0.4), width: 2)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _sectionLabel('ISSUE CATEGORY'),
           const SizedBox(height: 10),
           GridView.count(
-            crossAxisCount: 3, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 1.1,
+            crossAxisCount: 3, 
+            shrinkWrap: true, 
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10, 
+            crossAxisSpacing: 10, 
+            childAspectRatio: 0.95,
             children: cats.map((c) {
               final sel = selCat == c;
+              final imagePath = catImages[c] ?? '';
+              
               return GestureDetector(
                 onTap: () => setState(() => selCat = c),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
-                    color: sel ? primaryAccent.withOpacity(0.1) : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
+                    color: sel ? AppColors.orange.withOpacity(0.1) : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: sel ? primaryAccent : Colors.grey.withOpacity(0.2), width: sel ? 2 : 1),
+                    border: Border.all(color: sel ? AppColors.orange : Colors.grey.withOpacity(0.2), width: sel ? 2 : 1),
                   ),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Icon(_catIcon(c), size: 24, color: sel ? primaryAccent : Colors.grey),
-                    const SizedBox(height: 6),
-                    Text(c, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: sel ? (isDark ? Colors.white : Colors.black87) : Colors.grey), textAlign: TextAlign.center),
-                  ]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                          child: Container(
+                            color: isDark ? Colors.black26 : Colors.grey.shade200,
+                            child: Image.asset(
+                              imagePath,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                        child: Text(
+                          c, 
+                          style: TextStyle(
+                            fontSize: 10, 
+                            fontWeight: FontWeight.bold, 
+                            fontFamily: 'Nunito',
+                            color: sel ? (isDark ? Colors.white : Colors.black87) : Colors.grey
+                          ), 
+                          textAlign: TextAlign.center
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }).toList(),
           ),
+
+          if (selCat == 'Other') ...[
+            const SizedBox(height: 16),
+            _sectionLabel('WHAT IS IT ABOUT? *'),
+            const SizedBox(height: 6),
+            TextField(
+              controller: _customCatCtrl,
+              onChanged: (val) => setState(() => customCat = val),
+              decoration: InputDecoration(
+                hintText: 'Specify what this issue is about...',
+                filled: true, fillColor: AppColors.bg,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+              style: const TextStyle(fontFamily: 'Nunito')
+            ),
+            if (customCat.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Text('* Please specify what it is about', style: TextStyle(fontSize: 11, color: AppColors.orange, fontFamily: 'Nunito')),
+              ),
+          ],
         ]),
       ),
     );
@@ -451,11 +516,10 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
   Widget _step1({Key? key}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final fieldBg = isDark ? Colors.grey.shade900 : Colors.grey.shade50;
 
     return Card(
       key: key, elevation: 0, color: bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.blue.withOpacity(0.4), width: 2)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: AppColors.navy.withOpacity(0.4), width: 2)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -467,7 +531,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
               borderRadius: BorderRadius.circular(8),
               image: const DecorationImage(image: NetworkImage('https://maps.googleapis.com/maps/api/staticmap?center=mahad&zoom=14&size=600x300&sensor=false'), fit: BoxFit.cover)
             ),
-            child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(20)), child: Text('Ward ${widget.user.ward}, Mahad', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)))),
+            child: Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(20)), child: Text('Ward ${widget.user.ward}, Mahad', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Nunito')))),
           ),
           const SizedBox(height: 16),
           _sectionLabel('DESCRIPTION *'),
@@ -478,9 +542,10 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               hintText: 'Describe the issue in detail...',
-              filled: true, fillColor: fieldBg,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+              filled: true, fillColor: AppColors.bg,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
             ),
+            style: const TextStyle(fontFamily: 'Nunito')
           ),
           const SizedBox(height: 16),
           _sectionLabel('PHOTO / EVIDENCE'),
@@ -491,65 +556,66 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
               duration: const Duration(milliseconds: 250),
               height: 90,
               decoration: BoxDecoration(
-                color: hasPhoto ? Colors.green.withOpacity(0.08) : fieldBg,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: hasPhoto ? Colors.green : Colors.grey.withOpacity(0.2), width: hasPhoto ? 2 : 1),
+                color: hasPhoto ? AppColors.green.withOpacity(0.08) : AppColors.bg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: hasPhoto ? AppColors.green : Colors.grey.withOpacity(0.2), width: hasPhoto ? 2 : 1),
               ),
               child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(hasPhoto ? Icons.check_circle_rounded : Icons.add_a_photo_outlined, color: hasPhoto ? Colors.green : Colors.grey, size: 28),
+                Icon(hasPhoto ? Icons.check_circle_rounded : Icons.add_a_photo_outlined, color: hasPhoto ? AppColors.green : AppColors.grey, size: 28),
                 const SizedBox(height: 6),
-                Text(hasPhoto ? 'Photo attached ✓' : 'Tap to attach photo or video', style: TextStyle(fontSize: 12, color: hasPhoto ? Colors.green : Colors.grey, fontWeight: FontWeight.bold)),
+                Text(hasPhoto ? 'Photo attached ✓' : 'Tap to attach photo or video', style: TextStyle(fontSize: 12, color: hasPhoto ? AppColors.green : AppColors.grey, fontWeight: FontWeight.bold, fontFamily: 'Nunito')),
               ])),
             ),
           ),
           if (_descCtrl.text.isEmpty)
-            const Padding(padding: EdgeInsets.only(top: 10), child: Text('* Description is required to continue', style: TextStyle(fontSize: 11, color: Colors.orange))),
+            const Padding(padding: EdgeInsets.only(top: 10), child: Text('* Description is required to continue', style: TextStyle(fontSize: 11, color: AppColors.orange, fontFamily: 'Nunito'))),
         ]),
       ),
     );
   }
 
-  // ── STEP 2: Review (Formerly Step 3) ──────────────────────────────────────
+  // ── STEP 2: Review ────────────────────────────────────────────────────────
   Widget _step2({Key? key}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final displayedCategory = selCat == 'Other' && customCat.isNotEmpty ? 'Other: $customCat' : selCat;
 
     return Card(
       key: key, elevation: 0, color: bg,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.green.withOpacity(0.4), width: 2)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: AppColors.green.withOpacity(0.4), width: 2)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.fact_check_outlined, color: Colors.green, size: 22),
+              decoration: BoxDecoration(color: AppColors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.fact_check_outlined, color: AppColors.green, size: 22),
             ),
             const SizedBox(width: 12),
             const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Review Your Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-              Text('Check details before submitting', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              Text('Review Your Report', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
+              Text('Check details before submitting', style: TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito')),
             ]),
           ]),
           const SizedBox(height: 16),
           const Divider(height: 1, color: Colors.grey),
           const SizedBox(height: 16),
 
-          _reviewRow('Category',   selCat,      Icons.category_outlined,    Colors.orange),
+          _reviewRow('Category',   displayedCategory, Icons.category_outlined, AppColors.orange),
           _reviewRow('Description',_descCtrl.text.isEmpty ? 'No description provided' : _descCtrl.text, Icons.description_outlined, isDark ? Colors.white : Colors.black87),
-          _reviewRow('Photo',      hasPhoto ? 'Attached ✓' : 'None', Icons.photo_outlined, hasPhoto ? Colors.green : Colors.grey),
+          _reviewRow('Photo',      hasPhoto ? 'Attached ✓' : 'None', Icons.photo_outlined, hasPhoto ? AppColors.green : AppColors.grey),
 
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: primaryAccent.withOpacity(0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: primaryAccent.withOpacity(0.15))),
+            decoration: BoxDecoration(color: AppColors.navy.withOpacity(0.05), borderRadius: BorderRadius.circular(8), border: Border.all(color: AppColors.navy.withOpacity(0.15))),
             child: Row(children: [
-              const Icon(Icons.send_rounded, size: 16, color: primaryAccent),
+              const Icon(Icons.send_rounded, size: 16, color: AppColors.navy),
               const SizedBox(width: 8),
               Expanded(child: Text(
                 'Will be sent to: Ward ${widget.user.ward} Rep',
-                style: const TextStyle(fontSize: 12, color: primaryAccent, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 12, color: AppColors.navy, fontWeight: FontWeight.bold, fontFamily: 'Nunito'),
               )),
             ]),
           ),
@@ -564,8 +630,8 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 10),
-          SizedBox(width: 90, child: Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w600))),
-          Expanded(child: Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.bodyMedium?.color))),
+          SizedBox(width: 90, child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.grey, fontWeight: FontWeight.w600, fontFamily: 'Nunito'))),
+          Expanded(child: Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Theme.of(context).textTheme.bodyMedium?.color, fontFamily: 'Nunito'))),
         ]),
       );
 
@@ -574,7 +640,6 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(key: key, crossAxisAlignment: CrossAxisAlignment.start, children: [
-      // Search Bar
       Container(
         padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
         child: TextField(
@@ -582,17 +647,17 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
           onChanged: (val) => setState(() => searchQuery = val),
           decoration: InputDecoration(
             hintText: 'Search my reports...',
-            hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+            hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14, fontFamily: 'Nunito'),
             prefixIcon: Icon(Icons.search, color: isDark ? Colors.white54 : Colors.black54),
             filled: true,
-            fillColor: isDark ? const Color(0xFF1E293B) : Colors.grey.shade200,
+            fillColor: AppColors.bg,
             contentPadding: const EdgeInsets.symmetric(vertical: 0),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
           ),
+          style: const TextStyle(fontFamily: 'Nunito'),
         ),
       ),
 
-      // Filter chips 
       SizedBox(height: 36, child: ListView(
         scrollDirection: Axis.horizontal,
         children: filters.map((f) {
@@ -612,7 +677,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
                   border: Border.all(color: active ? _filterColor(f) : Colors.grey.withOpacity(0.3), width: 1.5)
                 ),
                 child: Text('$f ($count)', style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.bold,
+                  fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Nunito',
                   color: active ? Colors.white : (isDark ? Colors.white70 : Colors.black87)
                 )),
               ),
@@ -632,12 +697,12 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
           return Card(
             key: ValueKey(r.id),
             margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.withOpacity(0.15))),
             elevation: 0,
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             child: InkWell(
               onTap: () => setState(() { isExpanded ? _expanded.remove(r.id) : _expanded.add(r.id); }),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -649,13 +714,13 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
                     ),
                     const SizedBox(width: 10),
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(r.category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text('${r.ticket} • ${r.time}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                      Text(r.category, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'Nunito')),
+                      Text('${r.ticket} • ${r.time}', style: const TextStyle(fontSize: 11, color: AppColors.grey, fontFamily: 'Nunito')),
                     ])),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: _statusColor(r.status).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                      child: Text(r.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _statusColor(r.status))),
+                      child: Text(r.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _statusColor(r.status), fontFamily: 'Nunito')),
                     )
                   ]),
 
@@ -666,36 +731,35 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
                         ? Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                             const SizedBox(height: 12),
                             if (r.desc.isNotEmpty) ...[
-                              Text(r.desc, style: const TextStyle(fontSize: 13, height: 1.5)),
+                              Text(r.desc, style: const TextStyle(fontSize: 13, height: 1.5, fontFamily: 'Nunito')),
                               const SizedBox(height: 12),
                             ],
                             Row(children: [
-                              const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                              const Icon(Icons.location_on, size: 14, color: AppColors.grey),
                               const SizedBox(width: 4),
-                              Text(r.ward, style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                              Text(r.ward, style: const TextStyle(fontSize: 12, color: AppColors.grey, fontWeight: FontWeight.bold, fontFamily: 'Nunito')),
                             ]),
                             const SizedBox(height: 16),
-                            const Divider(height: 1),
+                            const Divider(height: 1, color: AppColors.border),
                             const SizedBox(height: 8),
                             
-                            // ── STATUS UPDATER AND WITHDRAW ──
                             Row(children: [
-                              const Text('Update Status: ', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+                              const Text('Update Status: ', style: TextStyle(fontSize: 12, color: AppColors.grey, fontWeight: FontWeight.bold, fontFamily: 'Nunito')),
                               const SizedBox(width: 8),
                               Container(
                                 height: 30,
                                 padding: const EdgeInsets.symmetric(horizontal: 8),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                                  color: AppColors.bg,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.grey.withOpacity(0.3))
+                                  border: Border.all(color: AppColors.border)
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
                                     value: r.status,
                                     isDense: true,
                                     icon: const Icon(Icons.keyboard_arrow_down, size: 16),
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _statusColor(r.status)),
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _statusColor(r.status), fontFamily: 'Nunito'),
                                     items: ['Unresolved', 'In Progress', 'Resolved'].map((s) {
                                       return DropdownMenuItem(value: s, child: Text(s));
                                     }).toList(),
@@ -711,8 +775,8 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
                               if (r.status == 'Unresolved')
                                 TextButton.icon(
                                   onPressed: () => _deleteReport(r), 
-                                  icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red), 
-                                  label: const Text('Withdraw', style: TextStyle(color: Colors.red, fontSize: 12))
+                                  icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.red), 
+                                  label: const Text('Withdraw', style: TextStyle(color: AppColors.red, fontSize: 12, fontFamily: 'Nunito', fontWeight: FontWeight.bold))
                                 )
                             ]),
                           ])
@@ -722,7 +786,7 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
                   if (!isExpanded)
                     const Padding(
                       padding: EdgeInsets.only(top: 8),
-                      child: Center(child: Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.grey)),
+                      child: Center(child: Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.grey)),
                     )
                 ]),
               ),
@@ -739,17 +803,17 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
       const SizedBox(height: 12),
       Text(
         searchQuery.isNotEmpty ? 'No reports match "$searchQuery"' : 'No ${filterStatus == 'All' ? '' : filterStatus.toLowerCase()} reports yet',
-        style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 14, color: AppColors.grey, fontWeight: FontWeight.w600, fontFamily: 'Nunito'),
         textAlign: TextAlign.center,
       ),
     ]),
   );
 
-  Widget _sectionLabel(String text) => Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5));
+  Widget _sectionLabel(String text) => Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.grey, letterSpacing: 0.5, fontFamily: 'Nunito'));
 
   Color _statusColor(String status) {
     switch (status) {
-      case 'Resolved':    return Colors.green;
+      case 'Resolved':    return AppColors.green;
       case 'In Progress': return Colors.blue;
       default:            return Colors.amber;
     }
@@ -757,89 +821,21 @@ class _ReportScreenState extends State<ReportScreen> with TickerProviderStateMix
 
   Color _filterColor(String f) {
     switch (f) {
-      case 'Resolved':    return Colors.green;
+      case 'Resolved':    return AppColors.green;
       case 'In Progress': return Colors.blue;
       case 'Unresolved':  return Colors.amber;
-      default:            return primaryAccent;
+      default:            return AppColors.navy; // Changed from primaryAccent to Navy
     }
   }
 
   IconData _catIcon(String cat) {
     switch (cat) {
-      case 'Streetlight': return Icons.lightbulb_outline;
-      case 'Water Leak':  return Icons.water_drop_outlined;
-      case 'Pothole':     return Icons.warning_amber_outlined;
+      case 'Electricity': return Icons.lightbulb_outline;
+      case 'Water leak':  return Icons.water_drop_outlined;
+      case 'Potholes':    return Icons.warning_amber_outlined;
       case 'Garbage':     return Icons.delete_outline;
       case 'Drainage':    return Icons.water_outlined;
       default:            return Icons.help_outline;
     }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SUBTLE TRENDING TICKER
-// ─────────────────────────────────────────────────────────────────────────────
-class _TrendingTicker extends StatefulWidget {
-  const _TrendingTicker();
-
-  @override
-  State<_TrendingTicker> createState() => _TrendingTickerState();
-}
-
-class _TrendingTickerState extends State<_TrendingTicker> with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<Offset> _slide;
-
-  static const _items = [
-    'Ward 3: 38 open water complaints this week',
-    'Sector 5 drainage marked Resolved today',
-    'Streetlight maintenance scheduled for Ward 4',
-  ];
-
-  int _current = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _slide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
-    _ctrl.forward();
-    _startLoop();
-  }
-
-  void _startLoop() async {
-    while (mounted) {
-      await Future.delayed(const Duration(seconds: 4));
-      if (!mounted) return;
-      await _ctrl.reverse();
-      setState(() => _current = (_current + 1) % _items.length);
-      _ctrl.forward();
-    }
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Container(
-      color: isDark ? primaryAccent.withOpacity(0.1) : primaryAccent.withOpacity(0.05),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      child: Row(children: [
-        const Icon(Icons.info_outline, size: 14, color: primaryAccent),
-        const SizedBox(width: 10),
-        Expanded(child: ClipRect(child: SlideTransition(
-          position: _slide,
-          child: Text(_items[_current],
-              style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 12, fontWeight: FontWeight.w600),
-              maxLines: 1, overflow: TextOverflow.ellipsis),
-        ))),
-      ]),
-    );
   }
 }

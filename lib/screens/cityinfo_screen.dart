@@ -22,16 +22,16 @@ class _CityInfoScreenState extends State<CityInfoScreen>
     with SingleTickerProviderStateMixin {
 
   final blogs = const [
-    {'id':1,'cat':'History',   'title':'The Ancient Forts of Rampur',            'emoji':'🏰','read':'4 min','time':'3d ago','col':AppColors.navy,
-     'body':'Rampur\'s history dates to the 12th century when the Yadava dynasty established a fortified settlement. The ruins of Rampur Fort still stand, with intricate stone carvings attracting historians from across Maharashtra. The fort\'s eastern tower is particularly well-preserved, offering a glimpse into medieval Deccan architecture. Archaeological surveys have uncovered pottery, coins and weapons dating back to 1100 AD in the surrounding area.'},
-    {'id':2,'cat':'Food',      'title':'Top 7 Restaurants You Must Visit',        'emoji':'🍽️','read':'3 min','time':'1d ago','col':AppColors.orange,
-     'body':'From legendary Poha at Sharma Nashta to the award-winning Mutton Curry at Hotel Rajwada — Rampur\'s food scene is a hidden gem. Don\'t miss the evening bhel at Gandhi Chowk. Local favourites also include the chaat stalls near Station Road that have been running for over 40 years. Every Sunday, the weekly bazaar near the bus stand hosts street food vendors whose recipes have been passed down through generations.'},
-    {'id':3,'cat':'Festivals', 'title':'Ganesh Chaturthi – City\'s Biggest Fest', 'emoji':'🎉','read':'5 min','time':'5d ago','col':AppColors.green,
-     'body':'Every year Rampur transforms during Ganesh Chaturthi. 200+ Ganesh mandals, 11 days of processions, and a final immersion at the city lake that draws 50,000 people. The Ward 3 mandal is famous for its eco-friendly Ganesh idols made from clay and natural colours. The festival brings an estimated ₹4 crore of economic activity to local businesses each year.'},
-    {'id':4,'cat':'Places',    'title':'Hidden Gems – Rampur Lake & Sunset Point', 'emoji':'🌅','read':'3 min','time':'1w ago','col':AppColors.teal,
-     'body':'Sunset Point near the old reservoir rewards a 20-minute trek with panoramic views. The lake hosts migratory birds from October to February. Early morning bird-watchers have spotted over 60 species including the Painted Stork and Indian Roller during peak season. The Nagar Panchayat recently completed a ₹45 lakh renovation of the lake walkway and added bird-watching platforms.'},
-    {'id':5,'cat':'Governance','title':'Rampur\'s Digital Transformation Story',  'emoji':'💡','read':'6 min','time':'2d ago','col':AppColors.blue,
-     'body':'Once known for slow civic services, Rampur Nagar Panchayat\'s digital overhaul — complaint tracking, digital voting, geo-tagged projects — has made it a state model for e-governance. The initiative has reduced complaint resolution time from 14 days to under 3 days on average. JanaSetu, the platform you\'re using now, was developed in partnership with the Maharashtra Urban Development Department and is being rolled out across 42 other Nagar Panchayats in the state.'},
+    {'id':1,'cat':'History',   'title':'The Historic Legacy of Mahad',            'emoji':'🏰','read':'4 min','time':'3d ago','col':AppColors.navy,
+     'body':'Mahad holds a monumental place in Indian history. It is situated at the foothills of the Sahyadri ranges, serving as the gateway to the impregnable Raigad Fort, the glorious capital of Chhatrapati Shivaji Maharaj\'s Maratha Empire. Moreover, Mahad is globally recognized for the \'Mahad Satyagraha\' led by Dr. B. R. Ambedkar in 1927 at Chavdar Tale, a defining moment in India\'s social justice and civil rights movement.'},
+    {'id':2,'cat':'Food',      'title':'Flavours of the Konkan',        'emoji':'🍽️','read':'3 min','time':'1d ago','col':AppColors.orange,
+     'body':'As a vibrant hub in the Konkan region, Mahad\'s food scene is a delightful mix of traditional Maharashtrian and coastal flavors. Don\'t miss the spicy Misal Pav near Shivaji Chowk, or the authentic Konkani fish thalis and refreshing Solkadhi offered by local eateries. The weekly bazaars also bring in fresh coastal produce and traditional sweets like ukadiche modak that have been local favorites for generations.'},
+    {'id':3,'cat':'Festivals', 'title':'Shiv Jayanti & Ganeshotsav', 'emoji':'🎉','read':'5 min','time':'5d ago','col':AppColors.green,
+     'body':'Mahad celebrates its cultural heritage with immense fervor. Shiv Jayanti is observed with grand processions, dhol-tasha pathaks, and traditional lezim performances honoring Chhatrapati Shivaji Maharaj. Ambedkar Jayanti also sees thousands of followers gathering at Chavdar Tale to pay their respects. The city also comes alive during Ganeshotsav and Shimga (Holi), reflecting the true vibrant spirit of the Konkan.'},
+    {'id':4,'cat':'Places',    'title':'Caves, Lakes, and Ancient Temples', 'emoji':'🛕','read':'3 min','time':'1w ago','col':AppColors.teal,
+     'body':'Beyond its historical core, Mahad is flanked by natural and ancient wonders. The Gandharpale Caves, a fascinating group of 30 Buddhist caves situated on a hill right off the Mumbai-Goa highway, date back to the 3rd century. Down in the city, the ancient Vireshwar Temple and the scenic banks of the Savitri river offer peaceful and spiritual retreats for both locals and tourists.'},
+    {'id':5,'cat':'Governance','title':'Mahad\'s Digital Civic Leap',  'emoji':'💡','read':'6 min','time':'2d ago','col':AppColors.blue,
+     'body':'Once relying on traditional paper-based municipal records, the Mahad Nagar Panchayat has enthusiastically embraced digital transformation. With platforms like JanaSetu, citizens can now seamlessly report civic issues, track ward-level municipal projects, and participate in local polls. This e-governance leap has drastically reduced grievance resolution times, making Mahad a forward-thinking civic model in the Raigad district.'},
   ];
 
   String _subTab = 'articles';
@@ -106,7 +106,7 @@ class _CityInfoScreenState extends State<CityInfoScreen>
       const Text('CITY INFORMATION', style: TextStyle(fontSize: 10, color: Color(0xFFFB923C),
           fontWeight: FontWeight.w800, letterSpacing: 1, fontFamily: 'Nunito')),
       const SizedBox(height: 4),
-      const Text('Know Your Rampur', style: TextStyle(fontSize: 22,
+      const Text('Know Your Mahad', style: TextStyle(fontSize: 22,
           fontWeight: FontWeight.w900, color: Colors.white, fontFamily: 'Nunito')),
       const Text('History · Culture · Food · Governance',
         style: TextStyle(fontSize: 12, color: Colors.white70, fontFamily: 'Nunito')),
@@ -115,7 +115,7 @@ class _CityInfoScreenState extends State<CityInfoScreen>
         _SI(v:'5',    l:'Categories'), SizedBox(width:20),
         _SI(v:'5',    l:'Articles'),   SizedBox(width:20),
         _SI(v:'12K',  l:'Readers'),    SizedBox(width:20),
-        _SI(v:'1248', l:'Founded'),
+        _SI(v:'1869', l:'Founded'),
       ]),
     ]),
   );
@@ -164,12 +164,12 @@ class _CityInfoScreenState extends State<CityInfoScreen>
       const Text('City at a Glance', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
       const SizedBox(height: 12),
       for (final f in [
-        [Icons.people_outline,             AppColors.orange, '1.2 Lakh', 'Population'],
-        [Icons.location_city_outlined,     AppColors.blue,   '12',        'Wards'],
-        [Icons.terrain_outlined,           AppColors.teal,   '42 km²',   'Area'],
-        [Icons.calendar_today_outlined,    AppColors.navy,   '1248 AD',  'Established'],
-        [Icons.how_to_vote_outlined,       AppColors.purple, '15+',      'Elected Members'],
-        [Icons.account_balance_wallet_outlined, AppColors.green, '₹3 Cr','Annual Budget'],
+        [Icons.people_outline,             AppColors.orange, '~30,000', 'Population'],
+        [Icons.location_city_outlined,     AppColors.blue,   '21',      'Wards'],
+        [Icons.terrain_outlined,           AppColors.teal,   '4.8 km²', 'Area'],
+        [Icons.calendar_today_outlined,    AppColors.navy,   '1869',    'Municipality Est.'],
+        [Icons.how_to_vote_outlined,       AppColors.purple, '21+',     'Elected Members'],
+        [Icons.account_balance_wallet_outlined, AppColors.green, '₹15 Cr','Annual Budget'],
       ])
         Padding(padding: const EdgeInsets.only(bottom: 10), child: Row(children: [
           Container(padding: const EdgeInsets.all(7),
@@ -216,7 +216,7 @@ class _CityInfoScreenState extends State<CityInfoScreen>
               color: AppColors.red, fontFamily: 'Nunito')),
         ]),
         const SizedBox(height: 10),
-        for (final r in [['Police','100'],['Ambulance','108'],['Fire','101'],['Municipal','02462-220011']])
+        for (final r in [['Police','100'],['Ambulance','108'],['Fire','101'],['Municipal','02143-222011']])
           Padding(padding: const EdgeInsets.only(bottom: 7), child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Text(r[0], style: const TextStyle(fontSize: 12, fontFamily: 'Nunito')),
@@ -324,25 +324,25 @@ class _CityInfoScreenState extends State<CityInfoScreen>
   // ══════════════════════════════════════════════
   Widget _factsContent(bool isWide) {
     final stats = [
-      ['Population','1.2 Lakh','↑ 3.2% since 2011',       AppColors.orange, Icons.people_outline],
-      ['Area',      '42 km²',  '12 administrative wards',  AppColors.teal,   Icons.map_outlined],
-      ['Founded',   '1248 AD', 'Yadava dynasty era',       AppColors.navy,   Icons.history_edu_outlined],
-      ['Literacy',  '84.6%',   'Above state average',      AppColors.green,  Icons.school_outlined],
-      ['Hospitals', '3 Public','+ 8 private clinics',      AppColors.red,    Icons.local_hospital_outlined],
-      ['Schools',   '24',      '6 higher secondary',       AppColors.purple, Icons.account_balance_outlined],
-      ['Budget',    '₹3 Cr',  'Annual municipal budget',  AppColors.gold,   Icons.account_balance_wallet_outlined],
-      ['Staff',     '~120',    'Municipal employees',      AppColors.blue,   Icons.badge_outlined],
+      ['Population','30,000+','Steady growth since 2011',       AppColors.orange, Icons.people_outline],
+      ['Area',      '~4.8 km²','21 administrative wards',        AppColors.teal,   Icons.map_outlined],
+      ['Founded',   '1869',    'Municipal Council Est.',         AppColors.navy,   Icons.history_edu_outlined],
+      ['Literacy',  '86%+',    'Highly educated demographic',    AppColors.green,  Icons.school_outlined],
+      ['Hospitals', '1 Rural', '+ multiple private clinics',     AppColors.red,    Icons.local_hospital_outlined],
+      ['Schools',   'Multiple','Historical institutions present',AppColors.purple, Icons.account_balance_outlined],
+      ['Budget',    '₹15 Cr',  'Annual municipal budget',        AppColors.gold,   Icons.account_balance_wallet_outlined],
+      ['Staff',     '~150',    'Municipal employees',            AppColors.blue,   Icons.badge_outlined],
     ];
     final landmarks = [
-      {'n':'Rampur Fort',    't':'Heritage', 'e':'🏰','c':AppColors.navy},
-      {'n':'Gandhi Chowk',   't':'Market',   'e':'🛒','c':AppColors.orange},
-      {'n':'City Lake',      't':'Nature',   'e':'🌊','c':AppColors.teal},
-      {'n':'Municipal Hall', 't':'Civic',    'e':'🏛️','c':AppColors.blue},
-      {'n':'Sunrise Temple', 't':'Religion', 'e':'🛕','c':AppColors.gold},
-      {'n':'Sunset Point',   't':'Tourism',  'e':'🌅','c':AppColors.green},
+      {'n':'Raigad Fort',    't':'Heritage', 'e':'🏰','c':AppColors.navy},
+      {'n':'Chavdar Tale',   't':'Historic', 'e':'💧','c':AppColors.orange},
+      {'n':'Gandharpale Caves','t':'Ancient','e':'🪨','c':AppColors.teal},
+      {'n':'Vireshwar Temple','t':'Religion','e':'🛕','c':AppColors.gold},
+      {'n':'Shivaji Chowk',  't':'City Center','e':'🚩','c':AppColors.blue},
+      {'n':'Savitri River',  't':'Nature',   'e':'🌊','c':AppColors.green},
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _secHead('City Statistics', 'Key facts about Rampur Nagar Panchayat'),
+      _secHead('City Statistics', 'Key facts about Mahad Nagar Panchayat'),
       const SizedBox(height: 14),
       GridView.count(
         crossAxisCount: isWide ? 4 : 2, shrinkWrap: true,
@@ -371,7 +371,7 @@ class _CityInfoScreenState extends State<CityInfoScreen>
         )).toList(),
       ),
       const SizedBox(height: 22),
-      _secHead('Notable Landmarks', 'Places that define Rampur'),
+      _secHead('Notable Landmarks', 'Places that define Mahad'),
       const SizedBox(height: 12),
       GridView.count(
         crossAxisCount: isWide ? 3 : 2, shrinkWrap: true,
@@ -397,11 +397,11 @@ class _CityInfoScreenState extends State<CityInfoScreen>
       ),
       const SizedBox(height: 22),
       AppCard(padding: EdgeInsets.zero, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        MapWidget(label: 'Rampur · Ward Map', height: 180),
+        MapWidget(label: 'Mahad · Ward Map', height: 180),
         Padding(padding: const EdgeInsets.all(14), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('City Map', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, fontFamily: 'Nunito')),
           const SizedBox(height: 4),
-          const Text('Rampur spans 42 km² across 12 wards along the Godavari basin.',
+          const Text('Mahad is located in the Raigad district of Maharashtra, situated picturesquely on the banks of the Savitri River along the Mumbai-Goa highway.',
             style: TextStyle(fontSize: 12, color: AppColors.grey, fontFamily: 'Nunito', height: 1.5)),
         ])),
       ])),
@@ -420,7 +420,7 @@ class _CityInfoScreenState extends State<CityInfoScreen>
         gradient: const LinearGradient(colors: [AppColors.navy, AppColors.navyLight]),
         borderRadius: BorderRadius.circular(16)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('RAMPUR NAGAR PANCHAYAT', style: TextStyle(fontSize: 9, color: Color(0xFFFB923C),
+        const Text('MAHAD NAGAR PANCHAYAT', style: TextStyle(fontSize: 9, color: Color(0xFFFB923C),
             fontWeight: FontWeight.w800, letterSpacing: 1.5, fontFamily: 'Nunito')),
         const SizedBox(height: 4),
         const Text('Governance Structure', style: TextStyle(fontSize: 18,
@@ -439,9 +439,9 @@ class _CityInfoScreenState extends State<CityInfoScreen>
         'Head of the Nagar Panchayat. Chairs all council meetings and represents the body to the state government.'),
       const Divider(height: 20),
       _officialTile(Icons.how_to_vote_outlined, AppColors.blue,  'Ward Councillors (Elected Members)',
-        'Minimum 10 elected ward members. ⅓ seats reserved for SC/ST, OBC and women. Each member represents one ward.'),
+        'Elected ward members from Mahad\'s 21 wards. ⅓ seats reserved for SC/ST, OBC and women. Each member represents one ward.'),
       const Divider(height: 20),
-      _officialTile(Icons.person_add_outlined,  AppColors.purple,'Nominated Members (3)',
+      _officialTile(Icons.person_add_outlined,  AppColors.purple,'Nominated Members',
         'Appointed by the state government for expertise in areas relevant to urban local governance.'),
     ])),
 
@@ -482,8 +482,8 @@ class _CityInfoScreenState extends State<CityInfoScreen>
         _revenueRow([
           ['40–50%','State Government Grants',   'General and specific-purpose grants via the Urban Development Department of Maharashtra.',       AppColors.blue],
           ['20–30%','Central Scheme Funds',      'Swachh Bharat Mission, PMAY (housing), AMRUT (urban infrastructure), Finance Commission grants.', AppColors.teal],
-          ['15–25%','Local Taxes',               'Property tax, water tax, professional tax, advertisement tax.',                                    AppColors.orange],
-          ['5–10%', 'Fees & Licences',           'Trade licences, building permits, occupancy certificates, market fees.',                           AppColors.green],
+          ['15–25%','Local Taxes',               'Property tax, water tax, professional tax, advertisement tax.',                                   AppColors.orange],
+          ['5–10%', 'Fees & Licences',           'Trade licences, building permits, occupancy certificates, market fees.',                          AppColors.green],
         ][i]),
         if (i < 3) const Divider(height: 20),
       ],
@@ -550,13 +550,13 @@ class _CityInfoScreenState extends State<CityInfoScreen>
   // ══════════════════════════════════════════════
   Widget _contactsContent(bool isWide) {
     final depts = [
-      {'d':'Chief Officer',        'p':'02462-220010','h':'Mon–Sat  10AM–5PM', 'i':Icons.manage_accounts_outlined,   'c':AppColors.navy,   'r':'Head of Administration'},
-      {'d':'Municipal Office',     'p':'02462-220011','h':'Mon–Sat  10AM–5PM', 'i':Icons.account_balance_outlined,   'c':AppColors.navy,   'r':'General Enquiries & Records'},
-      {'d':'Engineering Dept.',    'p':'02462-220015','h':'Mon–Sat  10AM–5PM', 'i':Icons.engineering_outlined,       'c':AppColors.orange, 'r':'Roads, Drains, Building Permits'},
-      {'d':'Water Supply Dept.',   'p':'02462-220022','h':'24 / 7 Helpline',   'i':Icons.water_drop_outlined,        'c':AppColors.teal,   'r':'Water Supply & New Connections'},
-      {'d':'Sanitation Inspector', 'p':'02462-220030','h':'Mon–Sat  9AM–5PM',  'i':Icons.cleaning_services_outlined, 'c':AppColors.green,  'r':'Garbage, Drains, Cleanliness'},
-      {'d':'Health Officer',       'p':'02462-220033','h':'Mon–Sat  9AM–5PM',  'i':Icons.local_hospital_outlined,    'c':AppColors.red,    'r':'Public Health & Clinics'},
-      {'d':'Education Officer',    'p':'02462-220040','h':'Mon–Sat  10AM–4PM', 'i':Icons.school_outlined,            'c':AppColors.blue,   'r':'Municipal Schools & Enrolment'},
+      {'d':'Chief Officer',        'p':'02143-222010','h':'Mon–Sat  10AM–5PM', 'i':Icons.manage_accounts_outlined,   'c':AppColors.navy,   'r':'Head of Administration'},
+      {'d':'Municipal Office',     'p':'02143-222011','h':'Mon–Sat  10AM–5PM', 'i':Icons.account_balance_outlined,   'c':AppColors.navy,   'r':'General Enquiries & Records'},
+      {'d':'Engineering Dept.',    'p':'02143-222015','h':'Mon–Sat  10AM–5PM', 'i':Icons.engineering_outlined,       'c':AppColors.orange, 'r':'Roads, Drains, Building Permits'},
+      {'d':'Water Supply Dept.',   'p':'02143-222022','h':'24 / 7 Helpline',   'i':Icons.water_drop_outlined,        'c':AppColors.teal,   'r':'Water Supply & New Connections'},
+      {'d':'Sanitation Inspector', 'p':'02143-222030','h':'Mon–Sat  9AM–5PM',  'i':Icons.cleaning_services_outlined, 'c':AppColors.green,  'r':'Garbage, Drains, Cleanliness'},
+      {'d':'Health Officer',       'p':'02143-222033','h':'Mon–Sat  9AM–5PM',  'i':Icons.local_hospital_outlined,    'c':AppColors.red,    'r':'Public Health & Clinics'},
+      {'d':'Education Officer',    'p':'02143-222040','h':'Mon–Sat  10AM–4PM', 'i':Icons.school_outlined,            'c':AppColors.blue,   'r':'Municipal Schools & Enrolment'},
       {'d':'Fire & Emergency',     'p':'101',         'h':'24 / 7',            'i':Icons.local_fire_department,      'c':AppColors.orange, 'r':'Fire Brigade & Emergency Response'},
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -591,7 +591,7 @@ class _CityInfoScreenState extends State<CityInfoScreen>
         ]),
       ),
 
-      _secHead('Department Contacts', 'Official numbers · Rampur Nagar Panchayat'),
+      _secHead('Department Contacts', 'Official numbers · Mahad Nagar Panchayat'),
       const SizedBox(height: 14),
 
       if (isWide)
