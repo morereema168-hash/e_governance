@@ -1,4 +1,4 @@
-{
+{"@@locale": "mr",
   "welcome": "स्वागत आहे",
   "login": "लॉगिन",
   "raiseComplaint": "तक्रार नोंदवा",
@@ -8,5 +8,10 @@
   "water": "पाणी",
   "streetlights": "पथदिवे",
   "trackStatus": "स्थिती तपासा",
-  "submit": "सबमिट करा"
+  "submit": "सबमिट करा",
+  "fundraise": "निधी उभारणी",
+  "community": "समुदाय",
+  "vote": "मतदान",
+  "feed": "फीड",
+  "polls": "मतदान"
 }

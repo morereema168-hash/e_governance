@@ -3,6 +3,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
+// ── LOCALIZATION IMPORTS ──
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
+// ────────────────────────────
+
 import 'theme.dart';
 import 'models/models.dart';
 import 'screens/login_screen.dart';
@@ -39,12 +45,31 @@ void main() async {
 
 class NagarPanchayatApp extends StatelessWidget {
   const NagarPanchayatApp({super.key});
+  
   @override
   Widget build(BuildContext context) {
+    // ── CONNECTED SETTINGS PROVIDER ──
+    final settings = Provider.of<SettingsProvider>(context);
+
     return MaterialApp(
       title: 'Nagar Panchayat – Mahad',
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
+      
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'), // English
+        Locale('mr'), // Marathi
+      ],
+      
+      // ── DYNAMIC LOCALE ──
+      locale: settings.locale, 
+      
       home: const _Root(),
     );
   }
@@ -471,6 +496,10 @@ class _ProfilePanel extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
+    // ── GRAB THE SETTINGS PROVIDER ──
+    final settings = Provider.of<SettingsProvider>(context);
+    final isMarathi = settings.locale.languageCode == 'mr';
+
     return Material(
       elevation: 20,
       borderRadius: BorderRadius.circular(18),
@@ -558,6 +587,34 @@ class _ProfilePanel extends StatelessWidget {
             
             const Divider(height: 1, color: AppColors.border),
             
+            // ── NEW LANGUAGE TOGGLE BUTTON ──
+            InkWell(
+              onTap: () {
+                settings.setLocale(isMarathi ? 'en' : 'mr');
+                onClose(); 
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    const Icon(Icons.language, color: AppColors.navy, size: 18),
+                    const SizedBox(width: 10),
+                    Text(
+                      isMarathi ? 'Switch to English' : 'मराठीत बदला',
+                      style: const TextStyle(
+                        color: AppColors.navy,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        fontFamily: 'Nunito',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const Divider(height: 1, color: AppColors.border),
+
             InkWell(
               onTap: onLogout,
               child: const Padding(
@@ -614,7 +671,7 @@ class _BottomNav extends StatelessWidget {
           _NavBtn(
             id: 'report',
             icon: Icons.assignment_outlined,
-            label: 'Report',
+            label: context.t.raiseComplaint, // <--- Using the clean shortcut
             active: active == 'report',
             onTap: setTab,
           ),
@@ -623,7 +680,7 @@ class _BottomNav extends StatelessWidget {
           _NavBtn(
             id: 'fundraise',
             icon: Icons.volunteer_activism, 
-            label: 'Fundraise',
+            label: context.t.fundraise, // <--- Using the clean shortcut
             active: active == 'fundraise',
             onTap: setTab,
           ),
@@ -632,7 +689,7 @@ class _BottomNav extends StatelessWidget {
           _NavBtn(
             id: 'feed',
             icon: Icons.people_outline,
-            label: 'Community',
+            label: context.t.community, // <--- Using the clean shortcut
             active: active == 'feed',
             onTap: setTab,
           ),
@@ -641,7 +698,7 @@ class _BottomNav extends StatelessWidget {
           _NavBtn(
             id: 'vote',
             icon: Icons.how_to_vote_outlined,
-            label: 'Vote',
+            label: context.t.vote, // <--- Make sure "vote" is in your .arb files!
             active: active == 'vote',
             onTap: setTab,
           ),

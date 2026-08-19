@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+// Add this import so the file can see AppLocalizations:
+import '../l10n/app_localizations.dart';
 
 class SettingsProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
-  String _locale = 'en'; // 'en', 'mr', 'hi'
+  
+  // Store as a Locale object so it plugs directly into MaterialApp
+  Locale _locale = const Locale('en'); 
 
   ThemeMode get themeMode => _themeMode;
-  String get locale => _locale;
+  Locale get locale => _locale;
 
   void toggleTheme(bool isDark) {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
@@ -13,39 +17,14 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   void setLocale(String languageCode) {
-    _locale = languageCode;
-    notifyListeners();
-  }
-
-  // Lightweight translation dictionary
-  static const Map<String, Map<String, String>> _translations = {
-    'en': {
-      'feed': 'Feed',
-      'map': 'Map',
-      'funds': 'Fundraisers',
-      'polls': 'Polls',
-      'profile': 'Profile',
-      'report_issue': 'Report an Issue',
-    },
-    'mr': {
-      'feed': 'फीड',
-      'map': 'नकाशा',
-      'funds': 'निधी संकलन',
-      'polls': 'मतदान',
-      'profile': 'प्रोफाईल',
-      'report_issue': 'समस्या नोंदवा',
-    },
-    'hi': {
-      'feed': 'फ़ीड',
-      'map': 'नक्शा',
-      'funds': 'धन उगाहने',
-      'polls': 'मतदान',
-      'profile': 'प्रोफ़ाइल',
-      'report_issue': 'समस्या दर्ज करें',
+    if (_locale.languageCode != languageCode) {
+      _locale = Locale(languageCode);
+      notifyListeners();
     }
-  };
-
-  String t(String key) {
-    return _translations[_locale]?[key] ?? key;
   }
+}
+
+// ── LOCALIZATION SHORTCUT ──
+extension LocalizationShortcut on BuildContext {
+  AppLocalizations get t => AppLocalizations.of(this)!;
 }

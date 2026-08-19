@@ -5,6 +5,10 @@ import '../models/models.dart';
 import '../widgets/shared_widgets.dart';
 import '../services/settings_provider.dart';
 
+// ── 1. ADD THIS IMPORT ──
+import '../l10n/app_localizations.dart';
+// ────────────────────────
+
 class MockPost {
   final int id;
   final String user;
@@ -176,12 +180,13 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
   }
 
   Widget _buildTabs(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final tabs = [
-      ['feed', settings.t('feed')],
-      ['polls', settings.t('polls')],
+      // ── 2. USE context.t HERE ──
+      ['feed', context.t.feed], 
+      ['polls', context.t.polls],
+      // ───────────────────────────
     ];
     
     return Container(
@@ -189,7 +194,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
       child: Row(children: tabs.map((t) {
         final active = sub == t[0];
         return Expanded(child: GestureDetector(
-          onTap: () => _switchTab(t[0]),
+          onTap: () => _switchTab(t[0] as String),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -203,7 +208,7 @@ class _CommunityScreenState extends State<CommunityScreen> with TickerProviderSt
                 fontSize: 13, 
                 color: active ? AppColors.orange : (isDark ? Colors.white54 : AppColors.grey)
               ),
-              child: Text(t[1], textAlign: TextAlign.center)),
+              child: Text(t[1] as String, textAlign: TextAlign.center)),
           ),
         ));
       }).toList()),
